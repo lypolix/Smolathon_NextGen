@@ -41,24 +41,13 @@ func (s *Store) GetDB() *sql.DB {
     return s.db
 }
 
-// User methods (existing)
-func (s *Store) CreateUser(user *models.User) error {
-    query := `INSERT INTO users (username, email, password, role, created_at, updated_at) 
-              VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`
-    
-    now := time.Now()
-    user.CreatedAt = now
-    user.UpdatedAt = now
-    
-    return s.db.QueryRow(query, user.Username, user.Email, user.Password, user.Role, user.CreatedAt, user.UpdatedAt).Scan(&user.ID)
-}
-
+// User methods (вернули обратно)
 func (s *Store) GetUserByEmail(email string) (*models.User, error) {
-    query := `SELECT id, username, email, password, role, created_at, updated_at FROM users WHERE email = $1`
+    query := `SELECT id, email, password, role, is_active, created_at, updated_at FROM users WHERE email = $1 AND is_active = true`
     
     user := &models.User{}
     err := s.db.QueryRow(query, email).Scan(
-        &user.ID, &user.Username, &user.Email, &user.Password, &user.Role, &user.CreatedAt, &user.UpdatedAt,
+        &user.ID, &user.Email, &user.Password, &user.Role, &user.IsActive, &user.CreatedAt, &user.UpdatedAt,
     )
     
     if err != nil {
@@ -68,7 +57,18 @@ func (s *Store) GetUserByEmail(email string) (*models.User, error) {
     return user, nil
 }
 
-// Fine methods
+func (s *Store) CreateUser(user *models.User) error {
+    query := `INSERT INTO users (email, password, role, is_active, created_at, updated_at) 
+              VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`
+    
+    now := time.Now()
+    user.CreatedAt = now
+    user.UpdatedAt = now
+    
+    return s.db.QueryRow(query, user.Email, user.Password, user.Role, user.IsActive, user.CreatedAt, user.UpdatedAt).Scan(&user.ID)
+}
+
+// Fine methods (без изменений)
 func (s *Store) GetFines() ([]models.Fine, error) {
     query := `SELECT id, date, violations_total, orders_total, fines_amount_total, collected_amount_total, created_at, updated_at 
               FROM fines ORDER BY date DESC`
@@ -116,7 +116,7 @@ func (s *Store) DeleteFine(id int) error {
     return err
 }
 
-// Evacuation methods
+// Evacuation methods (без изменений)
 func (s *Store) GetEvacuations() ([]models.Evacuation, error) {
     query := `SELECT id, date, evacuators_count, trips_count, evacuations_count, fine_lot_income, created_at, updated_at 
               FROM evacuations ORDER BY date DESC`
@@ -182,7 +182,7 @@ func (s *Store) CreateEvacuationRoute(route *models.EvacuationRoute) error {
     return s.db.QueryRow(query, route.Year, route.Month, route.Route, route.CreatedAt, route.UpdatedAt).Scan(&route.ID)
 }
 
-// Traffic Light methods
+// Traffic Light methods (без изменений)
 func (s *Store) GetTrafficLights() ([]models.TrafficLight, error) {
     query := `SELECT id, address, light_type, install_year, status, created_at, updated_at 
               FROM traffic_lights ORDER BY install_year DESC`
@@ -230,7 +230,7 @@ func (s *Store) DeleteTrafficLight(id int) error {
     return err
 }
 
-// News methods (existing - удалите старые и замените на штрафы/эвакуацию в статистике)
+// News methods (без изменений)
 func (s *Store) GetNews() ([]models.News, error) {
     query := `SELECT id, title, content, tag, date, created_at, updated_at FROM news ORDER BY date DESC`
     
@@ -278,7 +278,7 @@ func (s *Store) DeleteNews(id int) error {
     return err
 }
 
-// Services methods (сохраняем существующие)
+// Services methods (без изменений)
 func (s *Store) GetServices() ([]models.Service, error) {
     query := `SELECT id, title, description, price, category, icon_url, created_at, updated_at FROM services`
     
@@ -325,7 +325,7 @@ func (s *Store) DeleteService(id int) error {
     return err
 }
 
-// Team methods (сохраняем существующие)
+// Team methods (без изменений)
 func (s *Store) GetTeam() ([]models.TeamMember, error) {
     query := `SELECT id, name, position, experience, photo_url, created_at, updated_at FROM team`
     
@@ -347,7 +347,7 @@ func (s *Store) GetTeam() ([]models.TeamMember, error) {
     return team, nil
 }
 
-// Projects methods (сохраняем существующие)
+// Projects methods (без изменений)
 func (s *Store) GetProjects() ([]models.Project, error) {
     query := `SELECT id, title, description, category, status, created_at, updated_at FROM projects`
     
@@ -369,7 +369,7 @@ func (s *Store) GetProjects() ([]models.Project, error) {
     return projects, nil
 }
 
-// Stats methods - заменим на динамические данные из штрафов и эвакуации
+// Stats methods (без изменений)
 func (s *Store) GetStats() (map[string]interface{}, error) {
     stats := make(map[string]interface{})
 
@@ -408,7 +408,7 @@ func (s *Store) GetStats() (map[string]interface{}, error) {
     return stats, nil
 }
 
-// Traffic methods - заменим на реальные данные светофоров
+// Traffic methods (без изменений)
 func (s *Store) GetTraffic() (map[string]interface{}, error) {
     traffic := make(map[string]interface{})
 

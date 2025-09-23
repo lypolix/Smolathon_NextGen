@@ -1,16 +1,17 @@
--- Создание таблиц для базы данных
+-- Обновленные таблицы для базы данных
 
+-- Таблица пользователей (админ/редактор)
 CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
-    username VARCHAR(100) NOT NULL,
     email VARCHAR(100) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
-    role VARCHAR(20) DEFAULT 'user',
+    role VARCHAR(20) NOT NULL CHECK (role IN ('admin', 'editor')),
+    is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Таблица штрафов (из Excel)
+-- Остальные таблицы остаются без изменений
 CREATE TABLE IF NOT EXISTS fines (
     id SERIAL PRIMARY KEY,
     date DATE NOT NULL,
@@ -22,7 +23,6 @@ CREATE TABLE IF NOT EXISTS fines (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Таблица эвакуации (из Excel)
 CREATE TABLE IF NOT EXISTS evacuations (
     id SERIAL PRIMARY KEY,
     date DATE NOT NULL,
@@ -34,7 +34,6 @@ CREATE TABLE IF NOT EXISTS evacuations (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Таблица маршрутов эвакуации (из Excel)
 CREATE TABLE IF NOT EXISTS evacuation_routes (
     id SERIAL PRIMARY KEY,
     year INTEGER NOT NULL,
@@ -44,7 +43,6 @@ CREATE TABLE IF NOT EXISTS evacuation_routes (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Таблица светофоров (из Excel)
 CREATE TABLE IF NOT EXISTS traffic_lights (
     id SERIAL PRIMARY KEY,
     address VARCHAR(500) NOT NULL,
@@ -55,7 +53,6 @@ CREATE TABLE IF NOT EXISTS traffic_lights (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Остальные таблицы (существующие)
 CREATE TABLE IF NOT EXISTS news (
     id SERIAL PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
@@ -97,12 +94,13 @@ CREATE TABLE IF NOT EXISTS projects (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Вставка тестовых данных
-INSERT INTO users (username, email, password, role) VALUES 
-('admin', 'admin@smolensk.ru', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin'),
-('editor', 'editor@smolensk.ru', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'editor');
+-- Вставка пользователей (админ и редактор)
+-- Пароль: password (хешированный с bcrypt)
+INSERT INTO users (email, password, role) VALUES 
+('admin@smolensk.ru', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin'),
+('editor@smolensk.ru', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'editor');
 
--- Вставка данных из Excel файла (примеры)
+-- Вставка тестовых данных (остается без изменений)
 INSERT INTO fines (date, violations_total, orders_total, fines_amount_total, collected_amount_total) VALUES
 ('2024-01-01', 919, 832, 608816, 0),
 ('2024-01-02', 1733, 1576, 1153298, 122300),

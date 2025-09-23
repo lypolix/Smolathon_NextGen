@@ -24,9 +24,9 @@ func NewHandler(s *store.Store, cfg *config.Config) *Handler {
     }
 }
 
-// Auth handlers (existing)
-func (h *Handler) Login(c *gin.Context) {
-    var req models.LoginRequest
+// Auth handlers (обновленные - обычная авторизация по email/password)
+func (h *Handler) AdminLogin(c *gin.Context) {
+    var req models.AdminLoginRequest
     if err := c.ShouldBindJSON(&req); err != nil {
         c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
         return
@@ -35,6 +35,11 @@ func (h *Handler) Login(c *gin.Context) {
     user, err := h.store.GetUserByEmail(req.Email)
     if err != nil {
         c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
+        return
+    }
+
+    if user.Role != "admin" {
+        c.JSON(http.StatusForbidden, gin.H{"error": "Access denied: admin role required"})
         return
     }
 
@@ -56,40 +61,80 @@ func (h *Handler) Login(c *gin.Context) {
     })
 }
 
-func (h *Handler) Register(c *gin.Context) {
-    var req models.RegisterRequest
+func (h *Handler) EditorLogin(c *gin.Context) {
+    var req models.EditorLoginRequest
     if err := c.ShouldBindJSON(&req); err != nil {
         c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
         return
     }
 
-    hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+    user, err := h.store.GetUserByEmail(req.Email)
     if err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
+        c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
         return
     }
 
-    if req.Role == "" {
-        req.Role = "user"
+    if user.Role != "editor" {
+        c.JSON(http.StatusForbidden, gin.H{"error": "Access denied: editor role required"})
+        return
     }
 
-    user := &models.User{
-        Username: req.Username,
-        Email:    req.Email,
-        Password: string(hashedPassword),
-        Role:     req.Role,
+    if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password)); err != nil {
+        c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
+        return
     }
 
-    if err := h.store.CreateUser(user); err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
+    token, err := auth.GenerateToken(*user, h.cfg.JWTSecret)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
         return
     }
 
     user.Password = ""
-    c.JSON(http.StatusCreated, gin.H{"user": user})
+    c.JSON(http.StatusOK, models.LoginResponse{
+        Token: token,
+        User:  *user,
+    })
 }
 
-// Fine handlers (новые)
+// Общий логин (опционально, если нужен единый эндпоинт)
+func (h *Handler) Login(c *gin.Context) {
+    var req models.LoginRequest
+    if err := c.ShouldBindJSON(&req); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        return
+    }
+
+    user, err := h.store.GetUserByEmail(req.Email)
+    if err != nil {
+        c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
+        return
+    }
+
+    if user.Role != "admin" && user.Role != "editor" {
+        c.JSON(http.StatusForbidden, gin.H{"error": "Access denied: admin or editor role required"})
+        return
+    }
+
+    if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password)); err != nil {
+        c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
+        return
+    }
+
+    token, err := auth.GenerateToken(*user, h.cfg.JWTSecret)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
+        return
+    }
+
+    user.Password = ""
+    c.JSON(http.StatusOK, models.LoginResponse{
+        Token: token,
+        User:  *user,
+    })
+}
+
+// Fine handlers (без изменений)
 func (h *Handler) GetFines(c *gin.Context) {
     fines, err := h.store.GetFines()
     if err != nil {
@@ -167,7 +212,7 @@ func (h *Handler) DeleteFine(c *gin.Context) {
     c.JSON(http.StatusOK, gin.H{"message": "Fine deleted successfully"})
 }
 
-// Evacuation handlers (новые)
+// Evacuation handlers (без изменений)
 func (h *Handler) GetEvacuations(c *gin.Context) {
     evacuations, err := h.store.GetEvacuations()
     if err != nil {
@@ -232,7 +277,7 @@ func (h *Handler) CreateEvacuationRoute(c *gin.Context) {
     c.JSON(http.StatusCreated, gin.H{"evacuation_route": route})
 }
 
-// Traffic Light handlers (новые)
+// Traffic Light handlers (без изменений)
 func (h *Handler) GetTrafficLights(c *gin.Context) {
     lights, err := h.store.GetTrafficLights()
     if err != nil {
@@ -312,7 +357,7 @@ func (h *Handler) DeleteTrafficLight(c *gin.Context) {
     c.JSON(http.StatusOK, gin.H{"message": "Traffic light deleted successfully"})
 }
 
-// News handlers (существующие)
+// News handlers (без изменений)
 func (h *Handler) GetNews(c *gin.Context) {
     news, err := h.store.GetNews()
     if err != nil {
@@ -386,7 +431,7 @@ func (h *Handler) DeleteNews(c *gin.Context) {
     c.JSON(http.StatusOK, gin.H{"message": "News deleted successfully"})
 }
 
-// Services handlers (существующие)
+// Services handlers (без изменений)
 func (h *Handler) GetServices(c *gin.Context) {
     services, err := h.store.GetServices()
     if err != nil {
@@ -464,7 +509,7 @@ func (h *Handler) DeleteService(c *gin.Context) {
     c.JSON(http.StatusOK, gin.H{"message": "Service deleted successfully"})
 }
 
-// Team handlers (существующие)
+// Team handlers (без изменений)
 func (h *Handler) GetTeam(c *gin.Context) {
     team, err := h.store.GetTeam()
     if err != nil {
@@ -475,7 +520,7 @@ func (h *Handler) GetTeam(c *gin.Context) {
     c.JSON(http.StatusOK, gin.H{"team": team})
 }
 
-// Projects handlers (существующие)
+// Projects handlers (без изменений)
 func (h *Handler) GetProjects(c *gin.Context) {
     projects, err := h.store.GetProjects()
     if err != nil {
@@ -486,7 +531,7 @@ func (h *Handler) GetProjects(c *gin.Context) {
     c.JSON(http.StatusOK, gin.H{"projects": projects})
 }
 
-// Stats handlers (обновленные - теперь используют данные из таблиц)
+// Stats handlers (без изменений)
 func (h *Handler) GetStats(c *gin.Context) {
     stats, err := h.store.GetStats()
     if err != nil {
@@ -497,7 +542,7 @@ func (h *Handler) GetStats(c *gin.Context) {
     c.JSON(http.StatusOK, gin.H{"stats": stats})
 }
 
-// Traffic handlers (обновленные - используют данные светофоров)
+// Traffic handlers (без изменений)
 func (h *Handler) GetTraffic(c *gin.Context) {
     traffic, err := h.store.GetTraffic()
     if err != nil {

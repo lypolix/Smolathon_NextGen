@@ -11,14 +11,15 @@ func RegisterRoutes(r *gin.Engine, s *store.Store, cfg *config.Config) {
     
     h := NewHandler(s, cfg)
 
-    // Аутентификация
+    // Аутентификация - раздельные эндпоинты + общий
     auth := r.Group("/api/auth")
     {
-        auth.POST("/login", h.Login)
-        auth.POST("/register", h.Register)
+        auth.POST("/admin/login", h.AdminLogin)
+        auth.POST("/editor/login", h.EditorLogin)
+        auth.POST("/login", h.Login) // общий логин
     }
 
-    // Публичные маршруты
+    // Публичные маршруты (доступны всем без авторизации)
     api := r.Group("/api")
     {
         api.GET("/news", h.GetNews)
@@ -28,7 +29,7 @@ func RegisterRoutes(r *gin.Engine, s *store.Store, cfg *config.Config) {
         api.GET("/stats", h.GetStats)
         api.GET("/traffic", h.GetTraffic)
         
-        // Новые эндпоинты для данных из Excel
+        // Данные из Excel - публичные
         api.GET("/fines", h.GetFines)
         api.GET("/evacuations", h.GetEvacuations)
         api.GET("/evacuation-routes", h.GetEvacuationRoutes)
@@ -73,13 +74,11 @@ func RegisterRoutes(r *gin.Engine, s *store.Store, cfg *config.Config) {
         admin.DELETE("/projects/:id", func(c *gin.Context) { c.JSON(200, gin.H{"message": "Delete project"}) })
     }
 
-    // Редакторские маршруты
+    // Редакторские маршруты (ограниченные права)
     editor := r.Group("/api/editor", AuthMiddleware(cfg), RequireRole("editor"))
     {
         editor.POST("/news", h.CreateNews)
         editor.PUT("/news/:id", h.UpdateNews)
-        editor.POST("/services", h.CreateService)
-        editor.PUT("/services/:id", h.UpdateService)
         editor.POST("/fines", h.CreateFine)
         editor.PUT("/fines/:id", h.UpdateFine)
         editor.POST("/evacuations", h.CreateEvacuation)
