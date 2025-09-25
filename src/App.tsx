@@ -5,7 +5,7 @@ import { Team } from './components/Team/Team';
 import { Projects } from './components/Projects/Projects';
 import { News } from './components/News/News';
 import { Statistics } from './components/Statistics/Statistics';
-import { Reestr } from './components/Reestr/Reestr';
+import { Services } from './components/Services/Services';
 import { Entrance } from './components/Entrance/Entrance';
 import { Admin } from './components/Admin/Admin';
 function App() {
@@ -18,8 +18,7 @@ function App() {
         <Route path="/projects" element={<Projects />} />
         <Route path="/news" element={<News />} />
         <Route path="/statistics" element={<Statistics />} />
-        <Route path="/reestr" element={<Reestr />} />
-        <Route path="/entrance" element={<Entrance />} />
+        <Route path="/services" element={<Services />} />
 
         <Route path="/admin" element={<Admin />} />
       </Routes>

@@ -1,5 +1,5 @@
 import { Header } from "../Header/Header";
-import { useStore } from "../../authLogic/store/StoreContext";
+import { useStore } from "../../backendConnection/authLogic/store/StoreContext";
 import { observer } from "mobx-react-lite";
 import { useState } from "react";
 import "./Entrance.css";

@@ -1,11 +1,12 @@
 @font-face{
-    font-family: "Bold";
+    font-family: "Bold1";
     src: url("/fonts/Bold.ttf") format("truetype");
     font-style: normal;
     font-display: swap;
+    font-weight: 700;
 }
 @font-face{
-    font-family: "Medium";
+    font-family: "Medium1";
     src: url("/fonts/Medium.ttf") format("truetype");
     font-style: normal;
     font-display: swap;
@@ -19,17 +20,19 @@
     font-display: swap;
 }
 @font-face{
-    font-family: "SemiBold";
+    font-family: "SemiBold1";
     src: url("/fonts/SemiBold.ttf") format("truetype");
+    font-weight: 600;
     
     font-style: normal;
     font-display: swap;
 }
 @font-face{
-    font-family: "Regular";
+    font-family: "Regular1";
     src: url("/fonts/Regular.ttf") format("truetype");
     font-style: normal;
     font-display: swap;
+    font-weight: 400;
 }
 
 
