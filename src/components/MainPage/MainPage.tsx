@@ -14,6 +14,7 @@ export function MainPage() {
       };
       getAllTraffic();
     }, []);
+    const[showPopup, setShowPopup]=useState(true);
   return (
     <>
       <div className="main-page">
@@ -53,6 +54,11 @@ export function MainPage() {
             </div>
           </div>
         </div>
+        
+          <div className="mainPagePopup">
+            
+          </div>
+       
       </div>
     </>
   );

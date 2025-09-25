@@ -111,3 +111,13 @@ h1 {
 .cont1 {
   display: grid;
 }
+.mainPagePopup {
+  width: 459;
+  height: 327;
+  top: 34px;
+  left: 57px;
+  angle: 0 deg;
+  opacity: 1;
+  border-radius: 22px;
+  background: #FCFFFA;
+}
