@@ -1,0 +1,106 @@
+.News {
+  height: 100vh;
+  width: 100%;
+  background: white;
+  display: flex;
+  color: #203716;
+}
+
+.container {
+  max-width: 1280px;
+  margin: 0 auto;
+}
+.contentNews {
+  width: 1280px;
+  height: 616px;
+  gap: 42px;
+  padding: 66px 100px;
+}
+.headingNews {
+  display: flex;
+  width: 1070px;
+  justify-content: space-between;
+}
+.headingNameNews {
+  font-family: Bold1;
+  font-size: 48px;
+}
+.noNewsMessage{
+  font-family: Bold1;
+  font-size: 38px;
+}
+.headingButtonNews {
+  width: 143px;
+  height: 50px;
+  border-radius: 51px;
+  padding: 10px 16px;
+  background: #364736;
+  color: white;
+  font-family: Medium1;
+  border: none;
+}
+.blocksNews {
+  width: 1070px;
+  justify-content: space-between;
+  display: flex;
+  margin-top: 42px;
+}
+.blockNews1 {
+  width: 258px;
+  border-radius: 28px;
+  justify-content: space-between;
+  padding: 16px 20px;
+  display: grid;
+  background: #d9d9d9;
+  box-sizing: border-box;
+}
+.headingBlockNews {
+  justify-content: space-between;
+  display: flex;
+  height: 36px;
+  align-items: center;
+}
+.heading1BlockNews {
+  border-radius: 20px;
+  font-family: SemiBold1;
+  font-size: 16px;
+  padding: 10px 16px;
+  background-color: #fcfffa;
+}
+.headingDateNews {
+  font-family: SemiBold1;
+  font-weight: 600;
+  font-size: 15px;
+  color: #62a744;
+}
+.contentBlockNews {
+  margin-top: 200px;
+  gap: 10px;
+  display: grid;
+  width: 218px;
+}
+.contentBlockNews1 {
+  gap: 6px;
+  height: auto;
+}
+.headingContentBlockNews {
+  font-family: Medium1;
+  font-size: 16px;
+  color: black;
+}
+.textContentBlockNews {
+  font-family: Medium1;
+  font-size: 13px;
+  color: #969595;
+}
+.contentBlockNewsButton {
+  width: 121px;
+  border-radius: 20px;
+  padding: 10px 16px;
+  background: #62a744;
+  color: #fcfffa;
+  font-family: Medium1;
+  font-size: 16px;
+  border: none;
+  justify-self: center;
+}

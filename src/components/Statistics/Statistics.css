@@ -1,0 +1,170 @@
+.stat-page {
+  height: 100vh;
+  width: 100%;
+  background: url("/Frame 158.png") no-repeat center center;
+  background-size: cover;
+  display: flex;
+  color: #fcfffa;
+}
+.statHeading {
+  margin-top: 45px;
+  font-family: Bold1;
+  font-size: 48px;
+  margin-bottom: 0px;
+}
+.statText {
+  font-family: Medium1;
+  font-size: 24px;
+  margin-left: 100px;
+  margin-top: 10px;
+  margin-bottom: 0px;
+}
+.statContent {
+  margin-left: 100px;
+  margin-top: 50px;
+  width: 1076px;
+  height: 255px;
+  box-sizing: border-box;
+  border-radius: 30px;
+  padding-top: 20px;
+  padding-right: 36px;
+  padding-bottom: 24px;
+  padding-left: 36px;
+  gap: 10px;
+  background: #383f3780;
+}
+.statContentHeading {
+  gap: 6px;
+  margin-top: 0px;
+}
+.statContentHeadingText {
+  font-family: Medium1;
+  font-size: 24px;
+  margin-top: 0px;
+  margin-bottom: 6px;
+}
+.statContentHeadingSections {
+  gap: 12px;
+  display: flex;
+  margin-top: 0px;
+}
+.SCHSection1 {
+  border-radius: 20px;
+  padding: 0px 16px;
+  height: 40px;
+  background: #62a744;
+  font-family: Medium1;
+  font-size: 16px;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}
+.SCHSection2 {
+  border-radius: 20px;
+  height: 36px;
+  padding: 2px 16px;
+  background: #e6a1524d;
+  font-family: Medium1;
+  font-size: 16px;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}
+.SCHSection3 {
+  border-radius: 20px;
+  height: 36px;
+  padding: 2px 16px;
+  background: #e652524d;
+  font-family: Medium1;
+  font-size: 16px;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}
+.statContentInfo {
+  margin-top: 10px;
+  display: flex;
+  width: 1004px;
+  gap: 14px;
+}
+.statContentInfoAmountDTP {
+  width: 255px;
+  height: 110px;
+  border-radius: 22px;
+  padding: 18px 26px;
+  gap: 10px;
+  box-sizing: border-box;
+  background: #fcfffa;
+}
+.statContentInfoAmountTextDTP {
+  color: #203716;
+  font-family: Medium1;
+  font-size: 16px;
+}
+.statContentInfoAmountNumberDTP {
+  color: #203716;
+  font-family: Bold1;
+  font-size: 48px;
+}
+
+.statContentInfoAmountInjured {
+  width: 352px;
+  height: 110px;
+  border-radius: 22px;
+  padding: 18px 26px;
+  gap: 10px;
+  box-sizing: border-box;
+  background: #364736;
+}
+.statContentInfoAmountTextInjured {
+  color: #fcfffa;
+  font-family: Medium1;
+  font-size: 16px;
+}
+.statContentInfoAmountNumberInjured {
+  color: #fcfffa;
+  font-family: Bold1;
+  font-size: 48px;
+}
+
+.statContentInfoAmountDead {
+  width: 351px;
+  height: 110px;
+  box-sizing: border-box;
+  border-radius: 22px;
+  padding: 18px 26px;
+  gap: 10px;
+  background: #364736;
+}
+.statContentInfoAmountTextDead {
+  color: #fcfffa;
+  font-family: Medium1;
+  font-size: 16px;
+}
+.statContentInfoAmountNumberDead {
+  color: #fcfffa;
+  font-family: Bold1;
+  font-size: 48px;
+}
+
+.statContentInfoAmountFines1 {
+  width: 492px;
+  height: 110px;
+  border-radius: 22px;
+  padding: 18px 26px;
+  gap: 10px;
+  box-sizing: border-box;
+  background: #fcfffa;
+}
+.statContentInfoAmountFines2 {
+  width: 492px;
+  height: 110px;
+  border-radius: 22px;
+  padding: 18px 26px;
+  gap: 10px;
+  box-sizing: border-box;
+  background: #364736;
+}
