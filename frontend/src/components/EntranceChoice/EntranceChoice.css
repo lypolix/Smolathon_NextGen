@@ -19,6 +19,9 @@
   font-size: 16px;
   font-family: Medium1;
 }
+.entranceChoiceEditor:hover{
+  background: #438427;
+}
 .entranceChoiceAdmin {
   color: white;
   background: #ca2323;
@@ -28,4 +31,8 @@
   font-size: 16px;
   padding: 10px;
   font-family: Medium1;
+}
+.entranceChoiceAdmin:hover{
+  background: #a10e0e;
+
 }

@@ -34,9 +34,9 @@ export function Statistics() {
 
   useEffect(() => {
     let mounted = true;
+
     const getAllStatistics = async () => {
       try {
-        // Ожидаем, что PublicService.getStatisticsInfo вернет либо {stats:{...}}, либо сразу {...}
         const result: any = await PublicService.getStatisticsInfo();
         if (!mounted) return;
         const payload: StatsPayload | null =
@@ -46,7 +46,7 @@ export function Statistics() {
         } else {
           setStats(payload);
         }
-      } catch (e) {
+      } catch {
         if (!mounted) return;
         setError("Ошибка загрузки статистики");
       } finally {
@@ -54,7 +54,9 @@ export function Statistics() {
         setLoading(false);
       }
     };
+
     getAllStatistics();
+
     return () => {
       mounted = false;
     };
@@ -74,7 +76,9 @@ export function Statistics() {
         </p>
         <div className="statContent">
           <div className="statContentHeading">
-            <h2 className="statContentHeadingText">Показатели за текущий год</h2>
+            <h2 className="statContentHeadingText">
+              Показатели за текущий год
+            </h2>
             <div className="statContentHeadingSections">
               <div
                 onClick={() => setChosenOption("dtp")}
@@ -134,9 +138,7 @@ export function Statistics() {
                     </div>
                   </div>
                   <div className="statContentInfoAmountDead">
-                    <div className="statContentInfoAmountTextDead">
-                      Всего поездок
-                    </div>
+                    <div className="statContentInfoAmountTextDead">Всего поездок</div>
                     <div className="statContentInfoAmountNumberDead">
                       {fmtNumber(stats.trips_count)}
                     </div>
@@ -147,25 +149,19 @@ export function Statistics() {
               {chosenOption === "evacuation" && (
                 <div className="statContentInfo">
                   <div className="statContentInfoAmountDTP">
-                    <div className="statContentInfoAmountTextDTP">
-                      Кол-во эвакуаций
-                    </div>
+                    <div className="statContentInfoAmountTextDTP">Кол-во эвакуаций</div>
                     <div className="statContentInfoAmountNumberDTP">
                       {fmtNumber(stats.evacuations_count)}
                     </div>
                   </div>
                   <div className="statContentInfoAmountInjured">
-                    <div className="statContentInfoAmountTextInjured">
-                      Кол-во эвакуаторов
-                    </div>
+                    <div className="statContentInfoAmountTextInjured">Кол-во эвакуаторов</div>
                     <div className="statContentInfoAmountNumberInjured">
                       {fmtNumber(stats.evacuators_count)}
                     </div>
                   </div>
                   <div className="statContentInfoAmountDead">
-                    <div className="statContentInfoAmountTextDead">
-                      Доход со штраф‑стоянок
-                    </div>
+                    <div className="statContentInfoAmountTextDead">Доход со штраф-стоянок</div>
                     <div className="statContentInfoAmountNumberDead">
                       {fmtCurrency(stats.fine_lot_income)}
                     </div>
@@ -176,17 +172,13 @@ export function Statistics() {
               {chosenOption === "fines" && (
                 <div className="statContentInfo">
                   <div className="statContentInfoAmountFines1">
-                    <div className="statContentInfoAmountTextDTP">
-                      Общая сумма штрафов
-                    </div>
+                    <div className="statContentInfoAmountTextDTP">Общая сумма штрафов</div>
                     <div className="statContentInfoAmountNumberDTP">
                       {fmtCurrency(stats.fines_amount_total)}
                     </div>
                   </div>
                   <div className="statContentInfoAmountFines2">
-                    <div className="statContentInfoAmountTextInjured">
-                      Сумма собранных штрафов
-                    </div>
+                    <div className="statContentInfoAmountTextInjured">Сумма собранных штрафов</div>
                     <div className="statContentInfoAmountNumberInjured">
                       {fmtCurrency(stats.collected_amount_total)}
                     </div>

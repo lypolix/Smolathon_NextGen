@@ -2,20 +2,27 @@ import { Header } from "../Header/Header";
 import "./News.css";
 import { useState, useEffect } from "react";
 import PublicService from "../../backendConnection/publicInfo/publicInfoService";
-import type { News as NewsItem } from "../../types";
+import type { News } from "../../types";
 
 export function News() {
-  const [news, setNews] = useState<NewsItem[]>([]);
+  const [news, setNews] = useState<News[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let mounted = true;
+
     const getAllNews = async () => {
       try {
-        const result = await PublicService.getNewsInfo(); // ожидается News[]
+        const result = await PublicService.getNewsInfo();
+
+        // Если вернулся объект с полем news, используем его, иначе предполагаем, что это массив News[]
+        const newsData: News[] = Array.isArray(result)
+          ? result
+          : result?.news ?? [];
+
         if (!mounted) return;
-        setNews(result ?? []);
+        setNews(newsData);
       } catch (e) {
         if (!mounted) return;
         setError("Ошибка загрузки новостей");
@@ -24,7 +31,9 @@ export function News() {
         setLoading(false);
       }
     };
+
     getAllNews();
+
     return () => {
       mounted = false;
     };
@@ -34,7 +43,6 @@ export function News() {
     if (!iso) return "";
     try {
       const d = new Date(iso);
-      // Формат DD.MM.YYYY
       const dd = String(d.getDate()).padStart(2, "0");
       const mm = String(d.getMonth() + 1).padStart(2, "0");
       const yyyy = d.getFullYear();
@@ -44,7 +52,7 @@ export function News() {
     }
   };
 
-  const latest = news.slice(-4).reverse(); // последние 4, от новых к старым
+  const latest = news.slice(-4).reverse();
 
   return (
     <div className="News">
@@ -61,9 +69,7 @@ export function News() {
           </div>
 
           {loading && <div className="noNewsMessage">Загрузка...</div>}
-          {error && !loading && (
-            <div className="noNewsMessage">{error}</div>
-          )}
+          {error && !loading && <div className="noNewsMessage">{error}</div>}
 
           {!loading && !error && (
             <div className="blocksNews">
@@ -76,14 +82,10 @@ export function News() {
                     </div>
                     <div className="contentBlockNews">
                       <div className="contentBlockNews1">
-                        <h2 className="headingContentBlockNews">
-                          {item.title}
-                        </h2>
+                        <h2 className="headingContentBlockNews">{item.title}</h2>
                         <p className="textContentBlockNews">{item.content}</p>
                       </div>
-                      <button className="contentBlockNewsButton">
-                        Подробнее
-                      </button>
+                      <button className="contentBlockNewsButton">Подробнее</button>
                     </div>
                   </div>
                 ))

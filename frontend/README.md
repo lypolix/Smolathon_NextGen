@@ -57,6 +57,7 @@ evacuation_routes(id, year, month, route, created_at, updated_at)
 
 traffic_lights(id, address, light_type, install_year, status, created_at, updated_at)
 
+
 # React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
@@ -125,5 +126,4 @@ export default defineConfig([
     },
   },
 ])
-
 
