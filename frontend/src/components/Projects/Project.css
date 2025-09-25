@@ -1,0 +1,117 @@
+.projects {
+    padding-top: 80px;
+    background: var(--light-bg);
+    min-height: 100vh;
+  }
+  
+  .projects__container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 40px 2rem;
+  }
+  
+  .projects__title {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: var(--text-dark);
+    margin-bottom: 2rem;
+    text-align: center;
+  }
+  
+  .projects__featured {
+    background: linear-gradient(135deg, #5c6bc0, #3f51b5);
+    color: var(--white);
+    border-radius: var(--border-radius);
+    padding: 3rem 2rem;
+    margin-bottom: 3rem;
+    text-align: left;
+  }
+  
+  .projects__featured-title {
+    font-size: 2rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+  }
+  
+  .projects__featured-description {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    opacity: 0.95;
+  }
+  
+  .projects__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 2rem;
+  }
+  
+  .projects__card {
+    border-radius: var(--border-radius);
+    padding: 2rem;
+    color: var(--white);
+    position: relative;
+    overflow: hidden;
+    min-height: 280px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  
+  .projects__card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+  }
+  
+  .projects__card--green {
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+  }
+  
+  .projects__card--gray {
+    background: linear-gradient(135deg, #616161, #424242);
+  }
+  
+  .projects__card--orange {
+    background: linear-gradient(135deg, #ff9800, #e65100);
+  }
+  
+  .projects__card-title {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+    line-height: 1.2;
+  }
+  
+  .projects__card-description {
+    font-size: 1rem;
+    line-height: 1.5;
+    opacity: 0.95;
+    flex: 1;
+  }
+  
+  .projects__card-icon {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    font-size: 2rem;
+    opacity: 0.3;
+  }
+  
+  @media (max-width: 768px) {
+    .projects__title {
+      font-size: 2rem;
+    }
+    
+    .projects__featured {
+      padding: 2rem 1.5rem;
+    }
+    
+    .projects__featured-title {
+      font-size: 1.5rem;
+    }
+    
+    .projects__grid {
+      grid-template-columns: 1fr;
+    }
+  }
+  

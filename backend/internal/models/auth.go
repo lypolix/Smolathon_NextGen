@@ -1,18 +1,5 @@
 package models
 
-type AdminLoginRequest struct {
-    AccessKey string `json:"access_key" binding:"required"`
-}
-
-type EditorLoginRequest struct {
-    AccessKey string `json:"access_key" binding:"required"`
-}
-
-type LoginResponse struct {
-    Token string `json:"token"`
-    Role  string `json:"role"`
-    Valid bool   `json:"valid"`
-}
 
 type AccessKey struct {
     ID        int    `json:"id" db:"id"`
