@@ -3,49 +3,43 @@
   justify-content: space-between;
   align-items: center;
   padding: 8px 12px;
-  width: 100%;
-  max-width: 1180px;
+  width: 1180px;
   margin: 36px auto 0 auto;
   background-color: transparent;
-  font-family: Medium;
+  font-family: Medium1;
   font-weight: 500;
   font-size: 16px;
   color: white;
-  margin-top: 36px;
-  margin-left: 50px;
-  margin-right: 50px;
 }
+
 .dropdown-wrapper {
-  position: relative; 
+  position: relative;
   display: inline-block;
 }
 
 .dropdown {
   position: absolute;
-  margin-top:11px;
+  margin-top: 11px;
   top: 100%;
   left: 50%;
   z-index: 1000;
   transform: translateX(-50%);
 }
 
-
 .menu {
   display: flex;
   gap: 20px;
   align-items: center;
   border-radius: 49px;
-  background: #18211b66;
   height: 50px;
 }
-
 
 .menu-item {
   cursor: pointer;
   border-radius: 20px;
   padding: 10px 16px;
   color: white;
-  text-decoration: none; 
+  text-decoration: none;
   transition: background-color 0.3s ease;
 }
 
@@ -58,17 +52,15 @@
 }
 
 .menu-item:hover {
-  background: #62a74499; 
+  background: #62a74499;
 }
 
-
 .menu-item.active {
-  background: #62a744cc; 
+  background: #62a744cc;
 }
 
 .header button {
   margin-left: 12px;
-  
 }
 
 .logo {
@@ -76,19 +68,19 @@
   height: 38px;
 }
 
-.enterH{
-    border-radius: 51px;
-    background-color: #364736;
-    padding: 15px 35px;
-    color: white;
-    font-size: 16px;
-    font-family: Medium;
-    border: none;
-    cursor: pointer;
-    position: relative;
-    transition: background-color 0.3s ease;
+.enterH {
+  border-radius: 51px;
+  padding: 15px 35px;
+  color: white;
+  font-size: 16px;
+  font-family: Medium1;
+  border: none;
+  cursor: pointer;
+  position: relative;
+  transition: background-color 0.3s ease;
+
 }
-.enterH:hover{
-    
-    background-color: #62A744
+
+.enterH:hover {
+  background-color: #62A744
 }
