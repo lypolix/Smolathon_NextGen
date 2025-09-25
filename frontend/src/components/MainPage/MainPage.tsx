@@ -2,34 +2,47 @@ import { Header } from "../Header/Header";
 import "./MainPage.css";
 import { useState, useEffect } from "react";
 import PublicService from "../../backendConnection/publicInfo/publicInfoService";
-import type { Traffic } from "../../types";
+import type { Statistics, Traffic } from "../../types";
 import { usePopup } from "../PopupContext";
 
-// Тип под ответ с бэкенда
-type TrafficResp = { traffic: Traffic };
+// Ответы бэкенда имеют вложенные ключи { stats: ... } и { traffic: ... }.
+// PublicService должен уже возвращать распакованные объекты: stats и traffic.
 
 export function MainPage() {
-  const [traffic, setTraffic] = useState<Traffic[] | undefined>(undefined);
+  const [stats, setStats] = useState<Statistics | null>(null);
+  const [traffic, setTraffic] = useState<Traffic | null>(null);
   const { showPopup, closePopup } = usePopup();
 
   useEffect(() => {
-    const getAllTraffic = async () => {
+    const load = async () => {
       try {
-        const result = await PublicService.getTrafficInfo();
-        // Приводим данные к массиву Traffic[]
-        const trafficData: Traffic[] = Array.isArray(result)
-          ? result
-          : result?.traffic
-          ? [result.traffic]
-          : [];
-        setTraffic(trafficData);
-        console.log(trafficData);
+        // Параллельные запросы к /api/stats и /api/traffic
+        const [s, t] = await Promise.all([
+          PublicService.getStatisticsInfo(),  // возврат response.data.stats
+          PublicService.getTrafficInfo()      // возврат response.data.traffic
+        ]);
+        setStats(s);
+        setTraffic(t);
+        console.log("stats:", s, "traffic:", t);
       } catch (e) {
-        console.error("Ошибка загрузки трафика", e);
+        console.error("Ошибка загрузки данных главной страницы", e);
       }
     };
-    getAllTraffic();
+    load();
   }, []);
+
+  // Подстановка значений без изменения вёрстки:
+  // - Аварии: используем доступный агрегат нарушений как показательный индикатор
+  const accidentsValue = stats?.violations_total ?? "—";
+  // - Перекрытые дороги: в API нет прямого поля; показываем число активных светофоров как инфраструктурный индикатор
+  const closedRoadsValue = stats?.traffic_lights_active ?? "—";
+  // - Оценка пробок: в API нет единого индекса; берём сумму основных типов светофоров как индикатор загрузки
+  const trafficEstimateValue =
+    traffic
+      ? (traffic.light_types["Т.1"] ?? 0) +
+        (traffic.light_types["Т.2"] ?? 0) +
+        (traffic.light_types["Т.3"] ?? 0)
+      : "—";
 
   return (
     <>
@@ -57,16 +70,16 @@ export function MainPage() {
               <span className="nameInf">Ситуация на дорогах</span>
               <div className="accidentsInf">
                 <span className="accName">Аварии</span>
-                <span className="accNum">{traffic?.[0]?.accidents ?? "—"}</span>
+                <span className="accNum">{accidentsValue}</span>
               </div>
               <div className="closedRoads">
                 <span className="roadsName">Перекрытые дороги</span>
-                <span className="roadsNum">{traffic?.[0]?.closedRoads ?? "—"}</span>
+                <span className="roadsNum">{closedRoadsValue}</span>
               </div>
             </div>
             <div className="traficEstimate">
               <span className="traficName">Оценка пробок</span>
-              <span className="traficNum">{traffic?.[0]?.trafficEstimate ?? "—"}</span>
+              <span className="traficNum">{trafficEstimateValue}</span>
             </div>
           </div>
         </div>
@@ -76,21 +89,13 @@ export function MainPage() {
         <>
           <div className="overlay" onClick={closePopup}></div>
           <div className="mainPagePopup">
-            <img
-              onClick={closePopup}
-              className="popupClose"
-              src="/close.png"
-            />
+            <img onClick={closePopup} className="popupClose" src="/close.png" />
             <div className="popupHeading">
               <h2 className="popupHeadingName">Вход как</h2>
               <div className="popupHeadingName1">Редактор</div>
             </div>
             <input placeholder="Логин" className="popupInputLogin" />
-            <input
-              placeholder="Пароль"
-              className="popupInputPassword"
-              type="password"
-            />
+            <input placeholder="Пароль" className="popupInputPassword" type="password" />
             <button className="popupButton">Войти</button>
           </div>
         </>
@@ -100,21 +105,13 @@ export function MainPage() {
         <>
           <div className="overlay" onClick={closePopup}></div>
           <div className="mainPagePopup">
-            <img
-              onClick={closePopup}
-              className="popupClose"
-              src="/close.png"
-            />
+            <img onClick={closePopup} className="popupClose" src="/close.png" />
             <div className="popupHeading1">
               <h2 className="popupHeadingName">Вход как</h2>
               <div className="popupHeadingName11">Администратор</div>
             </div>
             <input placeholder="Логин" className="popupInputLogin" />
-            <input
-              placeholder="Пароль"
-              className="popupInputPassword"
-              type="password"
-            />
+            <input placeholder="Пароль" className="popupInputPassword" type="password" />
             <button className="popupButton">Войти</button>
           </div>
         </>

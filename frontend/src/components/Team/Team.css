@@ -6,6 +6,7 @@
   display: flex;
   color: #fcfffa;
 }
+
 .teamHeading {
   font-family: Bold1;
   font-size: 48px;
@@ -13,6 +14,7 @@
   margin-top: 96px;
   margin-bottom: 0px;
 }
+
 .teamDescribe {
   margin-top: 10px;
   margin-left: 100px;
@@ -20,6 +22,7 @@
   font-size: 24px;
   color: #fcfffa;
 }
+
 .teamPeople {
   margin-top: 34px;
   width: 1074px;
@@ -27,6 +30,7 @@
   margin-left: 100px;
   display: flex;
 }
+
 .teamPerson {
   box-sizing: border-box;
   width: 348px;
@@ -36,32 +40,49 @@
   padding: 29px 38.5px;
   background: #36473699;
 }
+
 .contentTeamPerson {
   display: column;
   width: 271px;
   gap: 15px;
 }
+
+/* ФОТО: дефолтная картинка + покрытие персональным фото из inline style */
 .contentTeamPersonPhoto {
   width: 271px;
   height: 271px;
   border-radius: 22px;
-  background: #fcfffa;
+
+  /* Дефолтная аватарка из public/assets */
+  background-image: url("/assets/default-avatar.png");
+
+  /* Параметры отрисовки */
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
+
+  /* Цвет подложки (если картинка не загрузится) */
+  background-color: #fcfffa;
 }
+
 .contentTeamPersonInfo {
   margin-top: 15px;
   width: 158px;
   color: #fcfffa;
 }
+
 .contentTeamPersonInfoName {
   font-family: Medium1;
   font-size: 24px;
 }
+
 .contentTeamPersonInfoTitle {
   font-family: Medium1;
   font-size: 16px;
   margin-top: 6px;
   color: #fcfffa99;
 }
+
 .contentTeamPersonInfoStaz {
   font-family: Medium1;
   font-size: 16px;

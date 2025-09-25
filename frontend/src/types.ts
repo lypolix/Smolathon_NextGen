@@ -19,19 +19,21 @@ export interface Services {
   description: string;
   price: number;
   category: string;
-  icon_url: string;
+  icon_url: string | null;    // может быть null в ответах
   created_at: string;
   updated_at: string;
 }
+
 export interface Team {
   id: number;
   name: string;
   position: string;
   experience: string;
-  photo_url: string;
+  photo_url: string | null;   // может быть null в ответах
   created_at: string;
   updated_at: string;
 }
+
 export interface Projects {
   id: number;
   title: string;
@@ -41,6 +43,7 @@ export interface Projects {
   created_at: string;
   updated_at: string;
 }
+
 export interface Statistics {
   violations_total: number;
   orders_total: number;
@@ -52,8 +55,9 @@ export interface Statistics {
   fine_lot_income: number;
   traffic_lights_active: number;
 }
-export type Traffic = {
-  accidents: number;         // количество аварий
-  closedRoads: number;       // количество перекрытых дорог
-  trafficEstimate: string;   // оценка пробок (например "Средний", "Сильный")
-};
+
+// Соответствует { "traffic": { "light_types": {...}, "install_years": {...} } }
+export interface Traffic {
+  light_types: Record<string, number>;
+  install_years: Record<string, number>;
+}

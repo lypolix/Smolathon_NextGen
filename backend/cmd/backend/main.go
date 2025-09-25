@@ -1,12 +1,16 @@
 package main
 
 import (
+	"errors"
+	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv" // импорт для загрузки .env
+	"github.com/joho/godotenv"
 
 	"backend/config"
 	"backend/internal/api"
@@ -36,37 +40,72 @@ func logDBEnv() {
 		host, port, user, name, mask(pass))
 }
 
+// validateCfg — минимальная валидация критичных полей
+func validateCfg(cfg *config.Config) error {
+	if cfg == nil {
+		return fmt.Errorf("nil config")
+	}
+	if cfg.Port == "" {
+		return fmt.Errorf("empty API port")
+	}
+	// при необходимости добавить проверки cfg.DB.* и т.д.
+	return nil
+}
+
 func main() {
-	// 1) Автоподгрузка .env (из корня проекта)
-	// Пытаемся загрузить .env бесшумно: если файла нет, продолжаем с системным окружением.
-	// Можно явно указать путь: godotenv.Load(".env")
+	// 1) .env (не фатально при отсутствии)
 	if err := godotenv.Load(); err != nil {
 		log.Printf("No .env file found or failed to load: %v", err)
 	}
 
-	// 2) Лог текущих env (после загрузки .env)
+	// 2) Логи ENV для БД
 	logDBEnv()
 
-	// 3) Загрузка конфигурации приложения
-	cfg := config.Load()
+	// 3) Конфиг и валидация
+	cfg := config.Load() // предположительно возвращает *config.Config
+	if err := validateCfg(cfg); err != nil {
+		log.Fatalf("Invalid config: %v", err)
+	}
 
-	// 4) Лог API порта
-	log.Printf("API PORT=%q", cfg.Port)
+	// 4) Режим Gin
+	// Если поля Debug нет в конфиге — используем значение из окружения GIN_MODE.
+	// Можно явно зафиксировать Debug Mode в деве:
+	if os.Getenv("GIN_MODE") == "" {
+		// Чтобы видеть подробные логи локально
+		gin.SetMode(gin.DebugMode)
+	}
+	log.Printf("Gin mode: %s", gin.Mode())
 
 	// 5) Подключение к БД
 	s, err := store.NewStore(cfg)
 	if err != nil {
 		log.Fatal("Failed to connect to database:", err)
 	}
-	defer s.Close()
+	defer func() {
+		if cerr := s.Close(); cerr != nil {
+			log.Printf("DB close error: %v", cerr)
+		}
+	}()
 
-	// 6) HTTP роутер
+	// 6) Роутер с Logger/Recovery
 	r := gin.Default()
+
+	// Если RegisterRoutes сам добавляет префикс /api — оставляем как есть.
+	// Если нет — можно обернуть в группу: g := r.Group("/api"); api.RegisterRoutes(g, s, cfg)
 	api.RegisterRoutes(r, s, cfg)
 
-	// 7) Старт сервера
+	// 7) HTTP-сервер с таймаутами
+	srv := &http.Server{
+		Addr:           ":" + cfg.Port,
+		Handler:        r,
+		ReadTimeout:    10 * time.Second,
+		WriteTimeout:   30 * time.Second,
+		IdleTimeout:    60 * time.Second,
+		MaxHeaderBytes: 1 << 20,
+	}
+
 	log.Printf("Server starting on port %s", cfg.Port)
-	if err := r.Run(":" + cfg.Port); err != nil {
+	if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		log.Fatal("Failed to start server:", err)
 	}
 }

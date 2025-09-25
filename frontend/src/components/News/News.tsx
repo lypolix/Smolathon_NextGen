@@ -4,6 +4,10 @@ import { useState, useEffect } from "react";
 import PublicService from "../../backendConnection/publicInfo/publicInfoService";
 import type { News } from "../../types";
 
+type NewsResponse = {
+  news?: News[];
+};
+
 export function News() {
   const [news, setNews] = useState<News[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -14,15 +18,15 @@ export function News() {
 
     const getAllNews = async () => {
       try {
-        const result = await PublicService.getNewsInfo();
+        const result = (await PublicService.getNewsInfo()) as NewsResponse | News[] | null | undefined;
 
-        // Если вернулся объект с полем news, используем его, иначе предполагаем, что это массив News[]
-        const newsData: News[] = Array.isArray(result)
+        // Бэкенд возвращает { news: [...] }
+        const list: News[] = Array.isArray(result)
           ? result
-          : result?.news ?? [];
+          : (result?.news ?? []);
 
         if (!mounted) return;
-        setNews(newsData);
+        setNews(list);
       } catch (e) {
         if (!mounted) return;
         setError("Ошибка загрузки новостей");
@@ -48,11 +52,14 @@ export function News() {
       const yyyy = d.getFullYear();
       return `${dd}.${mm}.${yyyy}`;
     } catch {
-      return iso;
+      return iso ?? "";
     }
   };
 
-  const latest = news.slice(-4).reverse();
+  // Стабильно отсортировать по дате (newest first) и взять 4
+  const latest = [...news]
+    .sort((a, b) => new Date(b.date ?? b.created_at ?? "").getTime() - new Date(a.date ?? a.created_at ?? "").getTime())
+    .slice(0, 4);
 
   return (
     <div className="News">
@@ -78,7 +85,9 @@ export function News() {
                   <div className="blockNews1" key={item.id}>
                     <div className="headingBlockNews">
                       <div className="heading1BlockNews">{item.tag}</div>
-                      <div className="headingDateNews">{formatDate(item.date)}</div>
+                      <div className="headingDateNews">
+                        {formatDate(item.date ?? item.created_at)}
+                      </div>
                     </div>
                     <div className="contentBlockNews">
                       <div className="contentBlockNews1">

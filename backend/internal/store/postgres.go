@@ -16,438 +16,536 @@ type Store struct {
 }
 
 func NewStore(cfg *config.Config) (*Store, error) {
-    dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
-        cfg.DBHost, cfg.DBPort, cfg.DBUser, cfg.DBPassword, cfg.DBName)
-    
+    dsn := fmt.Sprintf(
+        "host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
+        cfg.DBHost, cfg.DBPort, cfg.DBUser, cfg.DBPassword, cfg.DBName,
+    )
+
     db, err := sql.Open("postgres", dsn)
     if err != nil {
         return nil, err
     }
-
     if err := db.Ping(); err != nil {
         return nil, err
     }
 
+    // Опционально ограничить пул
+    db.SetMaxOpenConns(10)
+    db.SetMaxIdleConns(10)
+    db.SetConnMaxLifetime(30 * time.Minute)
+
     log.Println("Connected to PostgreSQL")
-    
     return &Store{db: db}, nil
 }
 
-func (s *Store) Close() error {
-    return s.db.Close()
-}
+func (s *Store) Close() error { return s.db.Close() }
+func (s *Store) GetDB() *sql.DB { return s.db }
 
-func (s *Store) GetDB() *sql.DB {
-    return s.db
-}
-
-// User methods (вернули обратно)
+// Users
 func (s *Store) GetUserByEmail(email string) (*models.User, error) {
-    query := `SELECT id, email, password, role, is_active, created_at, updated_at FROM users WHERE email = $1 AND is_active = true`
-    
-    user := &models.User{}
-    err := s.db.QueryRow(query, email).Scan(
-        &user.ID, &user.Email, &user.Password, &user.Role, &user.IsActive, &user.CreatedAt, &user.UpdatedAt,
-    )
-    
-    if err != nil {
+    query := `
+        SELECT id, email, password, role, is_active,
+               COALESCE(created_at, CURRENT_TIMESTAMP) AS created_at,
+               COALESCE(updated_at, CURRENT_TIMESTAMP) AS updated_at
+        FROM public.users
+        WHERE email = $1 AND is_active = true
+    `
+    u := &models.User{}
+    if err := s.db.QueryRow(query, email).Scan(
+        &u.ID, &u.Email, &u.Password, &u.Role, &u.IsActive, &u.CreatedAt, &u.UpdatedAt,
+    ); err != nil {
+        log.Printf("GetUserByEmail err: %v", err)
         return nil, err
     }
-    
-    return user, nil
+    return u, nil
 }
 
 func (s *Store) CreateUser(user *models.User) error {
-    query := `INSERT INTO users (email, password, role, is_active, created_at, updated_at) 
-              VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`
-    
+    query := `
+        INSERT INTO public.users (email, password, role, is_active, created_at, updated_at)
+        VALUES ($1,$2,$3,$4,$5,$6)
+        RETURNING id
+    `
     now := time.Now()
     user.CreatedAt = now
     user.UpdatedAt = now
-    
-    return s.db.QueryRow(query, user.Email, user.Password, user.Role, user.IsActive, user.CreatedAt, user.UpdatedAt).Scan(&user.ID)
+    if err := s.db.QueryRow(query, user.Email, user.Password, user.Role, user.IsActive, user.CreatedAt, user.UpdatedAt).Scan(&user.ID); err != nil {
+        log.Printf("CreateUser err: %v", err)
+        return err
+    }
+    return nil
 }
 
-// Fine methods (без изменений)
+// Fines
 func (s *Store) GetFines() ([]models.Fine, error) {
-    query := `SELECT id, date, violations_total, orders_total, fines_amount_total, collected_amount_total, created_at, updated_at 
-              FROM fines ORDER BY date DESC`
-    
+    query := `
+        SELECT id, date, violations_total, orders_total, fines_amount_total, collected_amount_total,
+               COALESCE(created_at, CURRENT_TIMESTAMP) AS created_at,
+               COALESCE(updated_at, CURRENT_TIMESTAMP) AS updated_at
+        FROM public.fines
+        ORDER BY date DESC
+    `
     rows, err := s.db.Query(query)
-    if err != nil {
-        return nil, err
-    }
+    if err != nil { log.Printf("GetFines query err: %v", err); return nil, err }
     defer rows.Close()
 
-    var fines []models.Fine
+    var out []models.Fine
     for rows.Next() {
         var f models.Fine
-        if err := rows.Scan(&f.ID, &f.Date, &f.ViolationsTotal, &f.OrdersTotal, &f.FinesAmountTotal, &f.CollectedAmountTotal, &f.CreatedAt, &f.UpdatedAt); err != nil {
+        if err := rows.Scan(
+            &f.ID, &f.Date, &f.ViolationsTotal, &f.OrdersTotal, &f.FinesAmountTotal, &f.CollectedAmountTotal,
+            &f.CreatedAt, &f.UpdatedAt,
+        ); err != nil {
+            log.Printf("GetFines scan err: %v", err)
             return nil, err
         }
-        fines = append(fines, f)
+        out = append(out, f)
     }
-    
-    return fines, nil
+    return out, nil
 }
 
-func (s *Store) CreateFine(fine *models.Fine) error {
-    query := `INSERT INTO fines (date, violations_total, orders_total, fines_amount_total, collected_amount_total, created_at, updated_at) 
-              VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`
-    
+func (s *Store) CreateFine(f *models.Fine) error {
+    query := `
+        INSERT INTO public.fines (date, violations_total, orders_total, fines_amount_total, collected_amount_total, created_at, updated_at)
+        VALUES ($1,$2,$3,$4,$5,$6,$7)
+        RETURNING id
+    `
     now := time.Now()
-    fine.CreatedAt = now
-    fine.UpdatedAt = now
-    
-    return s.db.QueryRow(query, fine.Date, fine.ViolationsTotal, fine.OrdersTotal, fine.FinesAmountTotal, fine.CollectedAmountTotal, fine.CreatedAt, fine.UpdatedAt).Scan(&fine.ID)
+    f.CreatedAt = now
+    f.UpdatedAt = now
+    if err := s.db.QueryRow(query, f.Date, f.ViolationsTotal, f.OrdersTotal, f.FinesAmountTotal, f.CollectedAmountTotal, f.CreatedAt, f.UpdatedAt).Scan(&f.ID); err != nil {
+        log.Printf("CreateFine err: %v", err)
+        return err
+    }
+    return nil
 }
 
-func (s *Store) UpdateFine(id int, fine *models.Fine) error {
-    query := `UPDATE fines SET date = $2, violations_total = $3, orders_total = $4, fines_amount_total = $5, collected_amount_total = $6, updated_at = $7 WHERE id = $1`
-    
-    fine.UpdatedAt = time.Now()
-    _, err := s.db.Exec(query, id, fine.Date, fine.ViolationsTotal, fine.OrdersTotal, fine.FinesAmountTotal, fine.CollectedAmountTotal, fine.UpdatedAt)
-    return err
+func (s *Store) UpdateFine(id int, f *models.Fine) error {
+    query := `
+        UPDATE public.fines
+        SET date=$2, violations_total=$3, orders_total=$4, fines_amount_total=$5, collected_amount_total=$6, updated_at=$7
+        WHERE id=$1
+    `
+    f.UpdatedAt = time.Now()
+    if _, err := s.db.Exec(query, id, f.Date, f.ViolationsTotal, f.OrdersTotal, f.FinesAmountTotal, f.CollectedAmountTotal, f.UpdatedAt); err != nil {
+        log.Printf("UpdateFine err: %v", err)
+        return err
+    }
+    return nil
 }
 
 func (s *Store) DeleteFine(id int) error {
-    query := `DELETE FROM fines WHERE id = $1`
-    _, err := s.db.Exec(query, id)
-    return err
+    if _, err := s.db.Exec(`DELETE FROM public.fines WHERE id=$1`, id); err != nil {
+        log.Printf("DeleteFine err: %v", err)
+        return err
+    }
+    return nil
 }
 
-// Evacuation methods (без изменений)
+// Evacuations
 func (s *Store) GetEvacuations() ([]models.Evacuation, error) {
-    query := `SELECT id, date, evacuators_count, trips_count, evacuations_count, fine_lot_income, created_at, updated_at 
-              FROM evacuations ORDER BY date DESC`
-    
+    query := `
+        SELECT id, date, evacuators_count, trips_count, evacuations_count, fine_lot_income,
+               COALESCE(created_at, CURRENT_TIMESTAMP) AS created_at,
+               COALESCE(updated_at, CURRENT_TIMESTAMP) AS updated_at
+        FROM public.evacuations
+        ORDER BY date DESC
+    `
     rows, err := s.db.Query(query)
-    if err != nil {
-        return nil, err
-    }
+    if err != nil { log.Printf("GetEvacuations query err: %v", err); return nil, err }
     defer rows.Close()
 
-    var evacuations []models.Evacuation
+    var out []models.Evacuation
     for rows.Next() {
         var e models.Evacuation
-        if err := rows.Scan(&e.ID, &e.Date, &e.EvacuatorsCount, &e.TripsCount, &e.EvacuationsCount, &e.FineLotIncome, &e.CreatedAt, &e.UpdatedAt); err != nil {
+        if err := rows.Scan(
+            &e.ID, &e.Date, &e.EvacuatorsCount, &e.TripsCount, &e.EvacuationsCount, &e.FineLotIncome, &e.CreatedAt, &e.UpdatedAt,
+        ); err != nil {
+            log.Printf("GetEvacuations scan err: %v", err)
             return nil, err
         }
-        evacuations = append(evacuations, e)
+        out = append(out, e)
     }
-    
-    return evacuations, nil
+    return out, nil
 }
 
-func (s *Store) CreateEvacuation(evacuation *models.Evacuation) error {
-    query := `INSERT INTO evacuations (date, evacuators_count, trips_count, evacuations_count, fine_lot_income, created_at, updated_at) 
-              VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`
-    
+func (s *Store) CreateEvacuation(e *models.Evacuation) error {
+    query := `
+        INSERT INTO public.evacuations (date, evacuators_count, trips_count, evacuations_count, fine_lot_income, created_at, updated_at)
+        VALUES ($1,$2,$3,$4,$5,$6,$7)
+        RETURNING id
+    `
     now := time.Now()
-    evacuation.CreatedAt = now
-    evacuation.UpdatedAt = now
-    
-    return s.db.QueryRow(query, evacuation.Date, evacuation.EvacuatorsCount, evacuation.TripsCount, evacuation.EvacuationsCount, evacuation.FineLotIncome, evacuation.CreatedAt, evacuation.UpdatedAt).Scan(&evacuation.ID)
+    e.CreatedAt = now
+    e.UpdatedAt = now
+    if err := s.db.QueryRow(query, e.Date, e.EvacuatorsCount, e.TripsCount, e.EvacuationsCount, e.FineLotIncome, e.CreatedAt, e.UpdatedAt).Scan(&e.ID); err != nil {
+        log.Printf("CreateEvacuation err: %v", err)
+        return err
+    }
+    return nil
 }
 
 func (s *Store) GetEvacuationRoutes() ([]models.EvacuationRoute, error) {
-    query := `SELECT id, year, month, route, created_at, updated_at FROM evacuation_routes ORDER BY year DESC, month`
-    
+    query := `
+        SELECT id, year, month, route,
+               COALESCE(created_at, CURRENT_TIMESTAMP) AS created_at,
+               COALESCE(updated_at, CURRENT_TIMESTAMP) AS updated_at
+        FROM public.evacuation_routes
+        ORDER BY year DESC, month
+    `
     rows, err := s.db.Query(query)
-    if err != nil {
-        return nil, err
-    }
+    if err != nil { log.Printf("GetEvacuationRoutes query err: %v", err); return nil, err }
     defer rows.Close()
 
-    var routes []models.EvacuationRoute
+    var out []models.EvacuationRoute
     for rows.Next() {
         var r models.EvacuationRoute
         if err := rows.Scan(&r.ID, &r.Year, &r.Month, &r.Route, &r.CreatedAt, &r.UpdatedAt); err != nil {
+            log.Printf("GetEvacuationRoutes scan err: %v", err)
             return nil, err
         }
-        routes = append(routes, r)
+        out = append(out, r)
     }
-    
-    return routes, nil
+    return out, nil
 }
 
-func (s *Store) CreateEvacuationRoute(route *models.EvacuationRoute) error {
-    query := `INSERT INTO evacuation_routes (year, month, route, created_at, updated_at) 
-              VALUES ($1, $2, $3, $4, $5) RETURNING id`
-    
+func (s *Store) CreateEvacuationRoute(r *models.EvacuationRoute) error {
+    query := `
+        INSERT INTO public.evacuation_routes (year, month, route, created_at, updated_at)
+        VALUES ($1,$2,$3,$4,$5)
+        RETURNING id
+    `
     now := time.Now()
-    route.CreatedAt = now
-    route.UpdatedAt = now
-    
-    return s.db.QueryRow(query, route.Year, route.Month, route.Route, route.CreatedAt, route.UpdatedAt).Scan(&route.ID)
+    r.CreatedAt = now
+    r.UpdatedAt = now
+    if err := s.db.QueryRow(query, r.Year, r.Month, r.Route, r.CreatedAt, r.UpdatedAt).Scan(&r.ID); err != nil {
+        log.Printf("CreateEvacuationRoute err: %v", err)
+        return err
+    }
+    return nil
 }
 
-// Traffic Light methods (без изменений)
+// Traffic lights
 func (s *Store) GetTrafficLights() ([]models.TrafficLight, error) {
-    query := `SELECT id, address, light_type, install_year, status, created_at, updated_at 
-              FROM traffic_lights ORDER BY install_year DESC`
-    
+    query := `
+        SELECT id, address, light_type, install_year, status,
+               COALESCE(created_at, CURRENT_TIMESTAMP) AS created_at,
+               COALESCE(updated_at, CURRENT_TIMESTAMP) AS updated_at
+        FROM public.traffic_lights
+        ORDER BY install_year DESC
+    `
     rows, err := s.db.Query(query)
-    if err != nil {
-        return nil, err
-    }
+    if err != nil { log.Printf("GetTrafficLights query err: %v", err); return nil, err }
     defer rows.Close()
 
-    var lights []models.TrafficLight
+    var out []models.TrafficLight
     for rows.Next() {
         var t models.TrafficLight
         if err := rows.Scan(&t.ID, &t.Address, &t.LightType, &t.InstallYear, &t.Status, &t.CreatedAt, &t.UpdatedAt); err != nil {
+            log.Printf("GetTrafficLights scan err: %v", err)
             return nil, err
         }
-        lights = append(lights, t)
+        out = append(out, t)
     }
-    
-    return lights, nil
+    return out, nil
 }
 
-func (s *Store) CreateTrafficLight(light *models.TrafficLight) error {
-    query := `INSERT INTO traffic_lights (address, light_type, install_year, status, created_at, updated_at) 
-              VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`
-    
+func (s *Store) CreateTrafficLight(t *models.TrafficLight) error {
+    query := `
+        INSERT INTO public.traffic_lights (address, light_type, install_year, status, created_at, updated_at)
+        VALUES ($1,$2,$3,$4,$5,$6)
+        RETURNING id
+    `
     now := time.Now()
-    light.CreatedAt = now
-    light.UpdatedAt = now
-    
-    return s.db.QueryRow(query, light.Address, light.LightType, light.InstallYear, light.Status, light.CreatedAt, light.UpdatedAt).Scan(&light.ID)
+    t.CreatedAt = now
+    t.UpdatedAt = now
+    if err := s.db.QueryRow(query, t.Address, t.LightType, t.InstallYear, t.Status, t.CreatedAt, t.UpdatedAt).Scan(&t.ID); err != nil {
+        log.Printf("CreateTrafficLight err: %v", err)
+        return err
+    }
+    return nil
 }
 
-func (s *Store) UpdateTrafficLight(id int, light *models.TrafficLight) error {
-    query := `UPDATE traffic_lights SET address = $2, light_type = $3, install_year = $4, status = $5, updated_at = $6 WHERE id = $1`
-    
-    light.UpdatedAt = time.Now()
-    _, err := s.db.Exec(query, id, light.Address, light.LightType, light.InstallYear, light.Status, light.UpdatedAt)
-    return err
+func (s *Store) UpdateTrafficLight(id int, t *models.TrafficLight) error {
+    query := `
+        UPDATE public.traffic_lights
+        SET address=$2, light_type=$3, install_year=$4, status=$5, updated_at=$6
+        WHERE id=$1
+    `
+    t.UpdatedAt = time.Now()
+    if _, err := s.db.Exec(query, id, t.Address, t.LightType, t.InstallYear, t.Status, t.UpdatedAt); err != nil {
+        log.Printf("UpdateTrafficLight err: %v", err)
+        return err
+    }
+    return nil
 }
 
 func (s *Store) DeleteTrafficLight(id int) error {
-    query := `DELETE FROM traffic_lights WHERE id = $1`
-    _, err := s.db.Exec(query, id)
-    return err
+    if _, err := s.db.Exec(`DELETE FROM public.traffic_lights WHERE id=$1`, id); err != nil {
+        log.Printf("DeleteTrafficLight err: %v", err)
+        return err
+    }
+    return nil
 }
 
-// News methods (без изменений)
+// News
 func (s *Store) GetNews() ([]models.News, error) {
-    query := `SELECT id, title, content, tag, date, created_at, updated_at FROM news ORDER BY date DESC`
-    
+    query := `
+        SELECT id, title, content, tag, date,
+               COALESCE(created_at, CURRENT_TIMESTAMP) AS created_at,
+               COALESCE(updated_at, CURRENT_TIMESTAMP) AS updated_at
+        FROM public.news
+        ORDER BY date DESC
+    `
     rows, err := s.db.Query(query)
-    if err != nil {
-        return nil, err
-    }
+    if err != nil { log.Printf("GetNews query err: %v", err); return nil, err }
     defer rows.Close()
 
-    var news []models.News
+    var out []models.News
     for rows.Next() {
         var n models.News
         if err := rows.Scan(&n.ID, &n.Title, &n.Content, &n.Tag, &n.Date, &n.CreatedAt, &n.UpdatedAt); err != nil {
+            log.Printf("GetNews scan err: %v", err)
             return nil, err
         }
-        news = append(news, n)
+        out = append(out, n)
     }
-    
-    return news, nil
+    return out, nil
 }
 
-func (s *Store) CreateNews(news *models.News) error {
-    query := `INSERT INTO news (title, content, tag, date, created_at, updated_at) 
-              VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`
-    
+func (s *Store) CreateNews(n *models.News) error {
+    query := `
+        INSERT INTO public.news (title, content, tag, date, created_at, updated_at)
+        VALUES ($1,$2,$3,$4,$5,$6)
+        RETURNING id
+    `
     now := time.Now()
-    news.Date = now
-    news.CreatedAt = now
-    news.UpdatedAt = now
-    
-    return s.db.QueryRow(query, news.Title, news.Content, news.Tag, news.Date, news.CreatedAt, news.UpdatedAt).Scan(&news.ID)
+    n.Date = now
+    n.CreatedAt = now
+    n.UpdatedAt = now
+    if err := s.db.QueryRow(query, n.Title, n.Content, n.Tag, n.Date, n.CreatedAt, n.UpdatedAt).Scan(&n.ID); err != nil {
+        log.Printf("CreateNews err: %v", err)
+        return err
+    }
+    return nil
 }
 
-func (s *Store) UpdateNews(id int, news *models.News) error {
-    query := `UPDATE news SET title = $2, content = $3, tag = $4, updated_at = $5 WHERE id = $1`
-    
-    news.UpdatedAt = time.Now()
-    _, err := s.db.Exec(query, id, news.Title, news.Content, news.Tag, news.UpdatedAt)
-    return err
+func (s *Store) UpdateNews(id int, n *models.News) error {
+    query := `
+        UPDATE public.news
+        SET title=$2, content=$3, tag=$4, updated_at=$5
+        WHERE id=$1
+    `
+    n.UpdatedAt = time.Now()
+    if _, err := s.db.Exec(query, id, n.Title, n.Content, n.Tag, n.UpdatedAt); err != nil {
+        log.Printf("UpdateNews err: %v", err)
+        return err
+    }
+    return nil
 }
 
 func (s *Store) DeleteNews(id int) error {
-    query := `DELETE FROM news WHERE id = $1`
-    _, err := s.db.Exec(query, id)
-    return err
+    if _, err := s.db.Exec(`DELETE FROM public.news WHERE id=$1`, id); err != nil {
+        log.Printf("DeleteNews err: %v", err)
+        return err
+    }
+    return nil
 }
 
-// Services methods (без изменений)
+// Services
 func (s *Store) GetServices() ([]models.Service, error) {
-    query := `SELECT id, title, description, price, category, icon_url, created_at, updated_at FROM services`
-    
+    query := `
+        SELECT id, title, description, price, category,
+               COALESCE(icon_url, '') AS icon_url,
+               COALESCE(created_at, CURRENT_TIMESTAMP) AS created_at,
+               COALESCE(updated_at, CURRENT_TIMESTAMP) AS updated_at
+        FROM public.services
+    `
     rows, err := s.db.Query(query)
-    if err != nil {
-        return nil, err
-    }
+    if err != nil { log.Printf("GetServices query err: %v", err); return nil, err }
     defer rows.Close()
 
-    var services []models.Service
+    var out []models.Service
     for rows.Next() {
-        var service models.Service
-        if err := rows.Scan(&service.ID, &service.Title, &service.Description, &service.Price, &service.Category, &service.IconURL, &service.CreatedAt, &service.UpdatedAt); err != nil {
+        var srv models.Service
+        if err := rows.Scan(&srv.ID, &srv.Title, &srv.Description, &srv.Price, &srv.Category, &srv.IconURL, &srv.CreatedAt, &srv.UpdatedAt); err != nil {
+            log.Printf("GetServices scan err: %v", err)
             return nil, err
         }
-        services = append(services, service)
+        out = append(out, srv)
     }
-    
-    return services, nil
+    return out, nil
 }
 
-func (s *Store) CreateService(service *models.Service) error {
-    query := `INSERT INTO services (title, description, price, category, icon_url, created_at, updated_at) 
-              VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`
-    
+func (s *Store) CreateService(srv *models.Service) error {
+    query := `
+        INSERT INTO public.services (title, description, price, category, icon_url, created_at, updated_at)
+        VALUES ($1,$2,$3,$4,$5,$6,$7)
+        RETURNING id
+    `
     now := time.Now()
-    service.CreatedAt = now
-    service.UpdatedAt = now
-    
-    return s.db.QueryRow(query, service.Title, service.Description, service.Price, service.Category, service.IconURL, service.CreatedAt, service.UpdatedAt).Scan(&service.ID)
+    srv.CreatedAt = now
+    srv.UpdatedAt = now
+    if err := s.db.QueryRow(query, srv.Title, srv.Description, srv.Price, srv.Category, srv.IconURL, srv.CreatedAt, srv.UpdatedAt).Scan(&srv.ID); err != nil {
+        log.Printf("CreateService err: %v", err)
+        return err
+    }
+    return nil
 }
 
-func (s *Store) UpdateService(id int, service *models.Service) error {
-    query := `UPDATE services SET title = $2, description = $3, price = $4, category = $5, icon_url = $6, updated_at = $7 WHERE id = $1`
-    
-    service.UpdatedAt = time.Now()
-    _, err := s.db.Exec(query, id, service.Title, service.Description, service.Price, service.Category, service.IconURL, service.UpdatedAt)
-    return err
+func (s *Store) UpdateService(id int, srv *models.Service) error {
+    query := `
+        UPDATE public.services
+        SET title=$2, description=$3, price=$4, category=$5, icon_url=$6, updated_at=$7
+        WHERE id=$1
+    `
+    srv.UpdatedAt = time.Now()
+    if _, err := s.db.Exec(query, id, srv.Title, srv.Description, srv.Price, srv.Category, srv.IconURL, srv.UpdatedAt); err != nil {
+        log.Printf("UpdateService err: %v", err)
+        return err
+    }
+    return nil
 }
 
 func (s *Store) DeleteService(id int) error {
-    query := `DELETE FROM services WHERE id = $1`
-    _, err := s.db.Exec(query, id)
-    return err
+    if _, err := s.db.Exec(`DELETE FROM public.services WHERE id=$1`, id); err != nil {
+        log.Printf("DeleteService err: %v", err)
+        return err
+    }
+    return nil
 }
 
-// Team methods (без изменений)
+// Team
 func (s *Store) GetTeam() ([]models.TeamMember, error) {
-    query := `SELECT id, name, position, experience, photo_url, created_at, updated_at FROM team`
-    
+    // COALESCE для nullable колонок (photo_url, created_at, updated_at) — чтобы не падать на scan
+    query := `
+        SELECT id, name, position, experience,
+               photo_url,
+               created_at,
+               updated_at
+        FROM public.team
+        ORDER BY id
+    `
     rows, err := s.db.Query(query)
-    if err != nil {
-        return nil, err
-    }
+    if err != nil { log.Printf("GetTeam query err: %v", err); return nil, err }
     defer rows.Close()
 
-    var team []models.TeamMember
+    var out []models.TeamMember
     for rows.Next() {
-        var member models.TeamMember
-        if err := rows.Scan(&member.ID, &member.Name, &member.Position, &member.Experience, &member.PhotoURL, &member.CreatedAt, &member.UpdatedAt); err != nil {
+        var m models.TeamMember
+        if err := rows.Scan(&m.ID, &m.Name, &m.Position, &m.Experience, &m.PhotoURL, &m.CreatedAt, &m.UpdatedAt); err != nil {
+            log.Printf("GetTeam scan err: %v", err)
             return nil, err
         }
-        team = append(team, member)
+        out = append(out, m)
     }
-    
-    return team, nil
+    return out, nil
 }
 
-// Projects methods (без изменений)
+// Projects
 func (s *Store) GetProjects() ([]models.Project, error) {
-    query := `SELECT id, title, description, category, status, created_at, updated_at FROM projects`
-    
+    query := `
+        SELECT id, title, description, category, status,
+               COALESCE(created_at, CURRENT_TIMESTAMP) AS created_at,
+               COALESCE(updated_at, CURRENT_TIMESTAMP) AS updated_at
+        FROM public.projects
+    `
     rows, err := s.db.Query(query)
-    if err != nil {
-        return nil, err
-    }
+    if err != nil { log.Printf("GetProjects query err: %v", err); return nil, err }
     defer rows.Close()
 
-    var projects []models.Project
+    var out []models.Project
     for rows.Next() {
-        var project models.Project
-        if err := rows.Scan(&project.ID, &project.Title, &project.Description, &project.Category, &project.Status, &project.CreatedAt, &project.UpdatedAt); err != nil {
+        var p models.Project
+        if err := rows.Scan(&p.ID, &p.Title, &p.Description, &p.Category, &p.Status, &p.CreatedAt, &p.UpdatedAt); err != nil {
+            log.Printf("GetProjects scan err: %v", err)
             return nil, err
         }
-        projects = append(projects, project)
+        out = append(out, p)
     }
-    
-    return projects, nil
+    return out, nil
 }
 
-// Stats methods (без изменений)
+// Stats
 func (s *Store) GetStats() (map[string]interface{}, error) {
     stats := make(map[string]interface{})
 
-    // Получаем последние данные по штрафам
-    var fineStats models.Fine
-    fineQuery := `SELECT violations_total, orders_total, fines_amount_total, collected_amount_total 
-                  FROM fines ORDER BY date DESC LIMIT 1`
-    err := s.db.QueryRow(fineQuery).Scan(&fineStats.ViolationsTotal, &fineStats.OrdersTotal, &fineStats.FinesAmountTotal, &fineStats.CollectedAmountTotal)
-    if err == nil {
-        stats["violations_total"] = fineStats.ViolationsTotal
-        stats["orders_total"] = fineStats.OrdersTotal
-        stats["fines_amount_total"] = fineStats.FinesAmountTotal
-        stats["collected_amount_total"] = fineStats.CollectedAmountTotal
+    // fines last
+    var f models.Fine
+    fq := `
+        SELECT violations_total, orders_total, fines_amount_total, collected_amount_total
+        FROM public.fines ORDER BY date DESC LIMIT 1
+    `
+    if err := s.db.QueryRow(fq).Scan(&f.ViolationsTotal, &f.OrdersTotal, &f.FinesAmountTotal, &f.CollectedAmountTotal); err == nil {
+        stats["violations_total"] = f.ViolationsTotal
+        stats["orders_total"] = f.OrdersTotal
+        stats["fines_amount_total"] = f.FinesAmountTotal
+        stats["collected_amount_total"] = f.CollectedAmountTotal
     }
 
-    // Получаем последние данные по эвакуации
-    var evacStats models.Evacuation
-    evacQuery := `SELECT evacuators_count, trips_count, evacuations_count, fine_lot_income 
-                  FROM evacuations ORDER BY date DESC LIMIT 1`
-    err = s.db.QueryRow(evacQuery).Scan(&evacStats.EvacuatorsCount, &evacStats.TripsCount, &evacStats.EvacuationsCount, &evacStats.FineLotIncome)
-    if err == nil {
-        stats["evacuators_count"] = evacStats.EvacuatorsCount
-        stats["trips_count"] = evacStats.TripsCount
-        stats["evacuations_count"] = evacStats.EvacuationsCount
-        stats["fine_lot_income"] = evacStats.FineLotIncome
+    // evacuations last
+    var e models.Evacuation
+    eq := `
+        SELECT evacuators_count, trips_count, evacuations_count, fine_lot_income
+        FROM public.evacuations ORDER BY date DESC LIMIT 1
+    `
+    if err := s.db.QueryRow(eq).Scan(&e.EvacuatorsCount, &e.TripsCount, &e.EvacuationsCount, &e.FineLotIncome); err == nil {
+        stats["evacuators_count"] = e.EvacuatorsCount
+        stats["trips_count"] = e.TripsCount
+        stats["evacuations_count"] = e.EvacuationsCount
+        stats["fine_lot_income"] = e.FineLotIncome
     }
 
-    // Получаем количество светофоров
-    var trafficLightsCount int
-    lightQuery := `SELECT COUNT(*) FROM traffic_lights WHERE status = 'active'`
-    err = s.db.QueryRow(lightQuery).Scan(&trafficLightsCount)
-    if err == nil {
-        stats["traffic_lights_active"] = trafficLightsCount
+    // traffic lights count
+    var tlActive int
+    if err := s.db.QueryRow(`SELECT COUNT(*) FROM public.traffic_lights WHERE status='active'`).Scan(&tlActive); err == nil {
+        stats["traffic_lights_active"] = tlActive
     }
 
     return stats, nil
 }
 
-// Traffic methods (без изменений)
+// Traffic
 func (s *Store) GetTraffic() (map[string]interface{}, error) {
-    traffic := make(map[string]interface{})
+    res := make(map[string]interface{})
 
-    // Группируем светофоры по типам
-    typeQuery := `SELECT light_type, COUNT(*) FROM traffic_lights GROUP BY light_type`
+    // by type
+    typeQuery := `SELECT light_type, COUNT(*) FROM public.traffic_lights GROUP BY light_type`
     rows, err := s.db.Query(typeQuery)
-    if err != nil {
-        return nil, err
-    }
+    if err != nil { log.Printf("GetTraffic types err: %v", err); return nil, err }
     defer rows.Close()
 
-    lightTypes := make(map[string]int)
+    byType := make(map[string]int)
     for rows.Next() {
-        var lightType string
-        var count int
-        if err := rows.Scan(&lightType, &count); err != nil {
+        var lt string
+        var c int
+        if err := rows.Scan(&lt, &c); err != nil {
+            log.Printf("GetTraffic types scan err: %v", err)
             continue
         }
-        lightTypes[lightType] = count
+        byType[lt] = c
     }
-    traffic["light_types"] = lightTypes
+    res["light_types"] = byType
 
-    // Группируем по годам установки
-    yearQuery := `SELECT install_year, COUNT(*) FROM traffic_lights GROUP BY install_year ORDER BY install_year DESC`
+    // by year
+    yearQuery := `SELECT install_year, COUNT(*) FROM public.traffic_lights GROUP BY install_year ORDER BY install_year DESC`
     rows, err = s.db.Query(yearQuery)
     if err != nil {
-        return traffic, nil
+        // вернем частичный результат
+        return res, nil
     }
     defer rows.Close()
 
-    installYears := make(map[int]int)
+    byYear := make(map[int]int)
     for rows.Next() {
-        var year, count int
-        if err := rows.Scan(&year, &count); err != nil {
+        var y, c int
+        if err := rows.Scan(&y, &c); err != nil {
+            log.Printf("GetTraffic years scan err: %v", err)
             continue
         }
-        installYears[year] = count
+        byYear[y] = c
     }
-    traffic["install_years"] = installYears
+    res["install_years"] = byYear
 
-    return traffic, nil
+    return res, nil
 }
