@@ -4,6 +4,7 @@ import type {
   News,
   Services,
   Projects,
+  Statistics,
   Traffic,
 } from "../../types";
 import type { AxiosResponse } from "axios";
@@ -15,26 +16,13 @@ const $api = axios.create({
   baseURL: API_PUBLIC,
 });
 
-// Контейнеры ответов от бэка
+// Описываем ожидаемые “контейнеры” ответов от бэка
 type NewsResp = { news: News[] };
 type TeamResp = { team: Team[] };
 type ServicesResp = { services: Services[] };
 type ProjectsResp = { projects: Projects[] };
-type TrafficResp = { traffic: Traffic }; // по логам — объект
-
-// Точный тип под stats из бэкенда
-export type StatsPayload = {
-  collected_amount_total: number;
-  evacuations_count: number;
-  evacuators_count: number;
-  fine_lot_income: number;
-  fines_amount_total: number;
-  orders_total: number;
-  traffic_lights_active: number;
-  trips_count: number;
-  violations_total: number;
-};
-type StatsResp = { stats: StatsPayload } | { statistics: StatsPayload } | StatsPayload;
+type TrafficResp = { traffic: Traffic }; // судя по логам, объект, не массив
+type StatsResp = { stats: Statistics[] } | { statistics: Statistics[] }; // на случай разных ключей
 
 export default class PublicService {
   static async getTeamInfo(): Promise<Team[]> {
@@ -50,6 +38,7 @@ export default class PublicService {
 
   static async getNewsInfo(): Promise<News[]> {
     try {
+      // Бэкенд возвращает { news: [...] }, пример: es={"news":[{...}, ...]}
       const response: AxiosResponse<NewsResp> = await $api.get<NewsResp>("/news");
       console.log(response.data);
       return response.data.news ?? [];
@@ -81,17 +70,13 @@ export default class PublicService {
     }
   }
 
-  static async getStatisticsInfo(): Promise<StatsPayload> {
+  static async getStatisticsInfo(): Promise<Statistics[]> {
     try {
-      // Бэкенд присылает:
-      // { "stats": { collected_amount_total: ..., ... } }
-      // Поддержим также { "statistics": {...} } или прямой объект на случай изменений
+      // Поддержим оба варианта ключа (stats | statistics), чтобы не упасть при расхождении
       const response: AxiosResponse<StatsResp> = await $api.get<StatsResp>("/stats");
       console.log(response.data);
-      const data: any = response.data;
-      const payload: StatsPayload =
-        data?.stats ?? data?.statistics ?? data;
-      return payload as StatsPayload;
+      const anyData = response.data as any;
+      return anyData.stats ?? anyData.statistics ?? [];
     } catch (error) {
       console.log("ошибка при получении статистики");
       throw error;
