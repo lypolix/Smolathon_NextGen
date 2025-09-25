@@ -2,8 +2,7 @@ import "./EntranceChoice.css";
 import { usePopup } from "../PopupContext";
 
 export function EntranceChoice() {
-  const { openPopupEditor } = usePopup();
-  const { openPopupAdmin } = usePopup();
+  const { openPopupEditor, openPopupAdmin } = usePopup();
 
   return (
     <div className="entranceChoiceBlock">
@@ -16,4 +15,3 @@ export function EntranceChoice() {
     </div>
   );
 }
-

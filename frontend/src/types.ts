@@ -52,15 +52,8 @@ export interface Statistics {
   fine_lot_income: number;
   traffic_lights_active: number;
 }
-export interface Traffic {
-  light_types: {
-    t1: number;
-    t2: number;
-    t3: number;
-  };
-  install_years: {
-    2020: number;
-    2018: number;
-    2015: number;
-  };
-}
+export type Traffic = {
+  accidents: number;         // количество аварий
+  closedRoads: number;       // количество перекрытых дорог
+  trafficEstimate: string;   // оценка пробок (например "Средний", "Сильный")
+};

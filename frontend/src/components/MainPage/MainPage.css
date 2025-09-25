@@ -1,4 +1,132 @@
+.main-page {
+  height: 100vh;
+  width: 100%;
+  background: url("/background2.png") no-repeat center center;
+  background-size: cover;
+  display: flex;
+  color: white;
+}
 
+.mainPageText {
+  font-family: Regular1;
+  font-size: 20px;
+  margin-top: 7px;
+  width: 712px;
+  height: 148px;
+  margin-left: 100px;
+}
+
+h1 {
+  font-family: Heavy;
+  text-align: left;
+  font-size: 64px;
+  line-height: 100%;
+  letter-spacing: 0%;
+  width: 869px;
+  margin-top: 158px;
+  margin-left: 100px;
+}
+
+.highlight {
+  color: #62a744;
+}
+
+.container {
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.info {
+  width: 1070px;
+  display: flex;
+  border-radius: 40px;
+  justify-content: space-between;
+  padding: 10px 36px;
+  background: linear-gradient(to right, #62a744, #26411a);
+  font-family: Medium1;
+  align-items: center;
+  margin-left: 100px;
+  margin-top: 19px;
+}
+
+.block1 {
+  gap: 14px;
+  display: flex;
+  align-items: center;
+}
+
+.nameInf {
+  max-width: 88px;
+  font-size: 16px;
+  line-height: 100%;
+  letter-spacing: 0%;
+}
+
+.accidentsInf {
+  display: flex;
+  background: #203716;
+  border-radius: 16px;
+  padding: 7px 14px;
+  gap: 10px;
+  align-items: center;
+}
+
+.accNum {
+  font-family: Heavy;
+  font-size: 40px;
+}
+
+.closedRoads {
+  display: flex;
+  background: #203716;
+  border-radius: 16px;
+  padding: 7px 14px;
+  gap: 10px;
+  align-items: center;
+}
+
+.roadsNum {
+  font-family: Heavy;
+  font-size: 40px;
+}
+
+.traficEstimate {
+  gap: 12px;
+  display: flex;
+  align-items: center;
+}
+
+.traficName {
+  max-width: 145px;
+}
+
+.traficNum {
+  background: #203716;
+  font-family: Heavy;
+  border-radius: 16px;
+  font-size: 40px;
+  width: 67px;
+  height: 67px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.d3MainPage {
+  width: 548px;
+  height: 548px;
+  position: absolute;
+  left: 794px;
+}
+
+.cont {
+  display: flex;
+  position: relative;
+}
+
+.cont1 {
+  display: grid;
+}
 
 .mainPagePopup {
   position: fixed;
@@ -11,6 +139,7 @@
   background: #fcfffa;
   z-index: 1000;
 }
+
 .overlay {
   position: fixed;
   top: 0;
@@ -20,6 +149,7 @@
   background: rgba(0, 0, 0, 0.5);
   z-index: 999;
 }
+
 .popupHeading {
   display: flex;
   gap: 10px;
@@ -27,19 +157,22 @@
   margin-left: 122px;
   align-items: center;
 }
-.popupHeading1{
+
+.popupHeading1 {
   display: flex;
   gap: 10px;
   margin-top: 61px;
   margin-left: 95.5px;
   align-items: center;
 }
+
 .popupHeadingName {
   margin: 0px;
   font-family: SemiBold1;
   font-size: 24px;
   color: #000000;
 }
+
 .popupHeadingName1 {
   border-radius: 22px;
   padding: 10px 10px;
@@ -51,6 +184,7 @@
   height: 40px;
   box-sizing: border-box;
 }
+
 .popupHeadingName11 {
   align-content: center;
   box-sizing: border-box;
@@ -61,24 +195,10 @@
   background-color: #ca2323;
   font-family: Medium1;
   font-size: 16px;
-  color: #FCFFFA
+  color: #FCFFFA;
 }
 
-.popupInputLogin {
-  box-sizing: border-box;
-  width: 327px;
-  height: 46px;
-  border-radius: 22px;
-  padding: 14px 21px;
-  gap: 10px;
-  font-family: Medium1;
-  font-size: 15px;
-  color: #203716ad;
-  background: #e9e9e9;
-  margin-top: 19px;
-  margin-left: 66px;
-  border: none;
-}
+.popupInputLogin,
 .popupInputPassword {
   box-sizing: border-box;
   width: 327px;
@@ -90,16 +210,23 @@
   font-size: 15px;
   color: #203716ad;
   background: #e9e9e9;
-  margin-top: 10px;
-  margin-left: 66px;
   border: none;
+  margin-left: 66px;
 }
-.popupInputLogin:hover {
-  background: #f5f1f1;
+
+.popupInputLogin {
+  margin-top: 19px;
 }
+
+.popupInputPassword {
+  margin-top: 10px;
+}
+
+.popupInputLogin:hover,
 .popupInputPassword:hover {
   background: #f5f1f1;
 }
+
 .popupButton {
   cursor: pointer;
   font-family: Medium1;
@@ -113,6 +240,11 @@
   margin-top: 23px;
   border: none;
 }
+
+.popupButton:hover {
+  background: #62a744;
+}
+
 .popupClose {
   position: absolute;
   width: 18px;
@@ -121,7 +253,3 @@
   right: 20px;
   cursor: pointer;
 }
-.popupButton:hover {
-  background: #62a744;
-}
-

@@ -4,19 +4,33 @@ import { useState, useEffect } from "react";
 import PublicService from "../../backendConnection/publicInfo/publicInfoService";
 import type { Traffic } from "../../types";
 import { usePopup } from "../PopupContext";
+
+// Тип под ответ с бэкенда
 type TrafficResp = { traffic: Traffic };
+
 export function MainPage() {
-  const [traffic, setTraffic] = useState<TrafficResp | undefined>(undefined);
+  const [traffic, setTraffic] = useState<Traffic[] | undefined>(undefined);
   const { showPopup, closePopup } = usePopup();
 
   useEffect(() => {
     const getAllTraffic = async () => {
-      const result = await PublicService.getTrafficInfo();
-      setTraffic(result);
-      console.log(result);
+      try {
+        const result = await PublicService.getTrafficInfo();
+        // Приводим данные к массиву Traffic[]
+        const trafficData: Traffic[] = Array.isArray(result)
+          ? result
+          : result?.traffic
+          ? [result.traffic]
+          : [];
+        setTraffic(trafficData);
+        console.log(trafficData);
+      } catch (e) {
+        console.error("Ошибка загрузки трафика", e);
+      }
     };
     getAllTraffic();
   }, []);
+
   return (
     <>
       <div className="main-page">
@@ -30,34 +44,35 @@ export function MainPage() {
               </h1>
               <p className="mainPageText">
                 Центр организации дорожного движения Смоленской области (ЦОДД)
-                — это современное региональное региональное учреждение, созданное
+                — это современное региональное учреждение, созданное
                 для обеспечения безопасности, эффективности и устойчивого
                 развития транспортной системы региона.
               </p>
             </div>
             <img className="d3MainPage" src="/3d1.png" />
           </div>
+
           <div className="info">
             <div className="block1">
               <span className="nameInf">Ситуация на дорогах</span>
               <div className="accidentsInf">
                 <span className="accName">Аварии</span>
-                <span className="accNum">12</span>
+                <span className="accNum">{traffic?.[0]?.accidents ?? "—"}</span>
               </div>
               <div className="closedRoads">
                 <span className="roadsName">Перекрытые дороги</span>
-                <span className="roadsNum">8</span>
+                <span className="roadsNum">{traffic?.[0]?.closedRoads ?? "—"}</span>
               </div>
             </div>
             <div className="traficEstimate">
               <span className="traficName">Оценка пробок</span>
-              <span className="traficNum">8</span>
+              <span className="traficNum">{traffic?.[0]?.trafficEstimate ?? "—"}</span>
             </div>
           </div>
         </div>
       </div>
 
-      {showPopup=="editor" && (
+      {showPopup === "editor" && (
         <>
           <div className="overlay" onClick={closePopup}></div>
           <div className="mainPagePopup">
@@ -80,7 +95,8 @@ export function MainPage() {
           </div>
         </>
       )}
-      {showPopup=="admin" && (
+
+      {showPopup === "admin" && (
         <>
           <div className="overlay" onClick={closePopup}></div>
           <div className="mainPagePopup">

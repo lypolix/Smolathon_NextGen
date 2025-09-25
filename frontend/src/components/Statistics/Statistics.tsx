@@ -3,7 +3,7 @@ import "./Statistics.css";
 import { useState, useEffect } from "react";
 import PublicService from "../../backendConnection/publicInfo/publicInfoService";
 
-// Локальный тип под структуру stats из бэкенда
+// Тип под статистику
 type StatsPayload = {
   collected_amount_total: number;
   evacuations_count: number;
