@@ -18,8 +18,9 @@ type Config struct {
 }
 
 func Load() *Config {
+    // Пытаемся загрузить .env файл (не критично если его нет)
     if err := godotenv.Load(); err != nil {
-        log.Println("No .env file found")
+        log.Println("No .env file found, using environment variables")
     }
 
     config := &Config{
@@ -28,8 +29,13 @@ func Load() *Config {
         DBUser:     getEnv("DB_USER", "postgres"),
         DBPassword: getEnv("DB_PASSWORD", "password"),
         DBName:     getEnv("DB_NAME", "smolathon_db"),
-        JWTSecret:  getEnv("JWT_SECRET", "your-secret-key"),
+        JWTSecret:  getEnv("JWT_SECRET", "your-default-secret-key-change-in-production"),
         Port:       getEnv("PORT", "8080"),
+    }
+
+    // Проверяем критические параметры
+    if config.JWTSecret == "your-default-secret-key-change-in-production" {
+        log.Println("WARNING: Using default JWT secret. Set JWT_SECRET environment variable in production!")
     }
 
     return config

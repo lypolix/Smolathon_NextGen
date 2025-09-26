@@ -43,39 +43,72 @@ func (s *Store) GetDB() *sql.DB { return s.db }
 
 // Users
 func (s *Store) GetUserByEmail(email string) (*models.User, error) {
+    user := &models.User{}
+    
     query := `
-        SELECT id, email, password, role, is_active,
-               COALESCE(created_at, CURRENT_TIMESTAMP) AS created_at,
-               COALESCE(updated_at, CURRENT_TIMESTAMP) AS updated_at
-        FROM public.users
-        WHERE email = $1 AND is_active = true
+        SELECT id, email, password, role, created_at, updated_at 
+        FROM users 
+        WHERE email = $1
     `
-    u := &models.User{}
-    if err := s.db.QueryRow(query, email).Scan(
-        &u.ID, &u.Email, &u.Password, &u.Role, &u.IsActive, &u.CreatedAt, &u.UpdatedAt,
-    ); err != nil {
-        log.Printf("GetUserByEmail err: %v", err)
+    
+    log.Printf("GetUserByEmail: searching for email '%s'", email)
+    
+    err := s.db.QueryRow(query, email).Scan(
+        &user.ID,
+        &user.Email,
+        &user.Password,
+        &user.Role,
+        // &user.IsActive,  ← Убрать эту строку
+        &user.CreatedAt,
+        &user.UpdatedAt,
+    )
+    
+    if err != nil {
+        if err == sql.ErrNoRows {
+            log.Printf("GetUserByEmail: user '%s' not found", email)
+            return nil, err
+        }
+        log.Printf("GetUserByEmail error: %v", err)
         return nil, err
     }
-    return u, nil
+    
+    // Устанавливаем is_active по умолчанию
+    user.IsActive = true
+    
+    log.Printf("GetUserByEmail: found user ID=%d, email=%s, role=%s", 
+        user.ID, user.Email, user.Role)
+    
+    return user, nil
 }
+
+
 
 func (s *Store) CreateUser(user *models.User) error {
     query := `
-        INSERT INTO public.users (email, password, role, is_active, created_at, updated_at)
-        VALUES ($1,$2,$3,$4,$5,$6)
-        RETURNING id
+        INSERT INTO users (email, password, role, is_active) 
+        VALUES ($1, $2, $3, $4) 
+        RETURNING id, created_at, updated_at
     `
-    now := time.Now()
-    user.CreatedAt = now
-    user.UpdatedAt = now
-    if err := s.db.QueryRow(query, user.Email, user.Password, user.Role, user.IsActive, user.CreatedAt, user.UpdatedAt).Scan(&user.ID); err != nil {
-        log.Printf("CreateUser err: %v", err)
-        return err
-    }
-    return nil
+    
+    return s.db.QueryRow(
+        query,
+        user.Email,
+        user.Password,
+        user.Role,
+        user.IsActive,
+    ).Scan(&user.ID, &user.CreatedAt, &user.UpdatedAt)
 }
 
+func (s *Store) UpdateUserPassword(userID int, hashedPassword string) error {
+    query := `
+        UPDATE users 
+        SET password = $1, updated_at = CURRENT_TIMESTAMP 
+        WHERE id = $2
+    `
+    
+    _, err := s.db.Exec(query, hashedPassword, userID)
+    return err
+}
 // Fines
 func (s *Store) GetFines() ([]models.Fine, error) {
     query := `

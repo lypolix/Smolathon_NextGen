@@ -1,11 +1,12 @@
 package api
 
 import (
+    "log"
     "net/http"
     "strconv"
 
     "github.com/gin-gonic/gin"
-    "golang.org/x/crypto/bcrypt"
+
     "backend/config"
     "backend/internal/auth"
     "backend/internal/models"
@@ -17,91 +18,110 @@ type Handler struct {
     cfg   *config.Config
 }
 
-func NewHandler(s *store.Store, cfg *config.Config) *Handler {
-    return &Handler{
-        store: s,
-        cfg:   cfg,
-    }
+func NewHandler(store *store.Store, cfg *config.Config) *Handler {
+    return &Handler{store: store, cfg: cfg}
 }
 
-// Auth handlers (обновленные - обычная авторизация по email/password)
+// AdminLogin - логин для админа
 func (h *Handler) AdminLogin(c *gin.Context) {
     var req models.AdminLoginRequest
     if err := c.ShouldBindJSON(&req); err != nil {
-        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
         return
     }
 
+    // Поиск пользователя
     user, err := h.store.GetUserByEmail(req.Email)
     if err != nil {
+        log.Printf("Admin login failed for %s: user not found", req.Email)
         c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
         return
     }
 
+    // Проверка роли
     if user.Role != "admin" {
-        c.JSON(http.StatusForbidden, gin.H{"error": "Access denied: admin role required"})
+        log.Printf("Admin login failed for %s: not admin role (role=%s)", req.Email, user.Role)
+        c.JSON(http.StatusForbidden, gin.H{"error": "Admin access required"})
         return
     }
 
-    if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password)); err != nil {
+    // Простая проверка пароля БЕЗ хеширования
+    if user.Password != req.Password {
+        log.Printf("Admin login failed for %s: password mismatch", req.Email)
         c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
         return
     }
 
+    // Создание JWT токена: теперь функция принимает models.User и секрет
     token, err := auth.GenerateToken(*user, h.cfg.JWTSecret)
     if err != nil {
+        log.Printf("Failed to generate token for admin %s: %v", req.Email, err)
         c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
         return
     }
 
+    log.Printf("Admin login successful for %s", req.Email)
+
+    // Убираем пароль из ответа
     user.Password = ""
+
     c.JSON(http.StatusOK, models.LoginResponse{
         Token: token,
         User:  *user,
     })
 }
 
+// EditorLogin - логин для редактора
 func (h *Handler) EditorLogin(c *gin.Context) {
     var req models.EditorLoginRequest
     if err := c.ShouldBindJSON(&req); err != nil {
-        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
         return
     }
 
     user, err := h.store.GetUserByEmail(req.Email)
     if err != nil {
+        log.Printf("Editor login failed for %s: user not found", req.Email)
         c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
         return
     }
 
-    if user.Role != "editor" {
-        c.JSON(http.StatusForbidden, gin.H{"error": "Access denied: editor role required"})
+    if user.Role != "editor" && user.Role != "admin" {
+        log.Printf("Editor login failed for %s: insufficient permissions (role=%s)", req.Email, user.Role)
+        c.JSON(http.StatusForbidden, gin.H{"error": "Editor access required"})
         return
     }
 
-    if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password)); err != nil {
+    // Простая проверка пароля БЕЗ хеширования
+    if user.Password != req.Password {
+        log.Printf("Editor login failed for %s: password mismatch", req.Email)
         c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
         return
     }
 
+    // Новая сигнатура GenerateToken
     token, err := auth.GenerateToken(*user, h.cfg.JWTSecret)
     if err != nil {
+        log.Printf("Failed to generate token for editor %s: %v", req.Email, err)
         c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
         return
     }
 
+    log.Printf("Editor login successful for %s", req.Email)
+
     user.Password = ""
+
     c.JSON(http.StatusOK, models.LoginResponse{
         Token: token,
         User:  *user,
     })
 }
 
-// Общий логин (опционально, если нужен единый эндпоинт)
+// Обычный логин (для совместимости)
 func (h *Handler) Login(c *gin.Context) {
     var req models.LoginRequest
     if err := c.ShouldBindJSON(&req); err != nil {
-        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
         return
     }
 
@@ -111,16 +131,13 @@ func (h *Handler) Login(c *gin.Context) {
         return
     }
 
-    if user.Role != "admin" && user.Role != "editor" {
-        c.JSON(http.StatusForbidden, gin.H{"error": "Access denied: admin or editor role required"})
-        return
-    }
-
-    if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password)); err != nil {
+    // Простая проверка пароля БЕЗ хеширования
+    if user.Password != req.Password {
         c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
         return
     }
 
+    // Новая сигнатура GenerateToken
     token, err := auth.GenerateToken(*user, h.cfg.JWTSecret)
     if err != nil {
         c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
@@ -128,6 +145,7 @@ func (h *Handler) Login(c *gin.Context) {
     }
 
     user.Password = ""
+
     c.JSON(http.StatusOK, models.LoginResponse{
         Token: token,
         User:  *user,
@@ -141,7 +159,6 @@ func (h *Handler) GetFines(c *gin.Context) {
         c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get fines"})
         return
     }
-
     c.JSON(http.StatusOK, gin.H{"fines": fines})
 }
 
@@ -153,11 +170,11 @@ func (h *Handler) CreateFine(c *gin.Context) {
     }
 
     fine := &models.Fine{
-        Date:                 req.Date,
-        ViolationsTotal:      req.ViolationsTotal,
-        OrdersTotal:         req.OrdersTotal,
-        FinesAmountTotal:    req.FinesAmountTotal,
-        CollectedAmountTotal: req.CollectedAmountTotal,
+        Date:                  req.Date,
+        ViolationsTotal:       req.ViolationsTotal,
+        OrdersTotal:           req.OrdersTotal,
+        FinesAmountTotal:      req.FinesAmountTotal,
+        CollectedAmountTotal:  req.CollectedAmountTotal,
     }
 
     if err := h.store.CreateFine(fine); err != nil {
@@ -182,11 +199,11 @@ func (h *Handler) UpdateFine(c *gin.Context) {
     }
 
     fine := &models.Fine{
-        Date:                 req.Date,
-        ViolationsTotal:      req.ViolationsTotal,
-        OrdersTotal:         req.OrdersTotal,
-        FinesAmountTotal:    req.FinesAmountTotal,
-        CollectedAmountTotal: req.CollectedAmountTotal,
+        Date:                  req.Date,
+        ViolationsTotal:       req.ViolationsTotal,
+        OrdersTotal:           req.OrdersTotal,
+        FinesAmountTotal:      req.FinesAmountTotal,
+        CollectedAmountTotal:  req.CollectedAmountTotal,
     }
 
     if err := h.store.UpdateFine(id, fine); err != nil {
@@ -241,11 +258,11 @@ func (h *Handler) CreateEvacuation(c *gin.Context) {
     }
 
     evacuation := &models.Evacuation{
-        Date:            req.Date,
-        EvacuatorsCount: req.EvacuatorsCount,
-        TripsCount:      req.TripsCount,
+        Date:             req.Date,
+        EvacuatorsCount:  req.EvacuatorsCount,
+        TripsCount:       req.TripsCount,
         EvacuationsCount: req.EvacuationsCount,
-        FineLotIncome:   req.FineLotIncome,
+        FineLotIncome:    req.FineLotIncome,
     }
 
     if err := h.store.CreateEvacuation(evacuation); err != nil {
