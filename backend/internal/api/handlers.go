@@ -754,3 +754,103 @@ func (h *Handler) GetTraffic(c *gin.Context) {
 
     c.JSON(http.StatusOK, gin.H{"traffic": traffic})
 }
+
+func (h *Handler) GetVacancies(c *gin.Context) {
+    vacancies, err := h.store.GetVacancies()
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get vacancies"})
+        return
+    }
+    c.JSON(http.StatusOK, gin.H{"vacancies": vacancies})
+}
+
+// Публичное получение вакансии по ID
+func (h *Handler) GetVacancyByID(c *gin.Context) {
+    id, err := strconv.Atoi(c.Param("id"))
+    if err != nil || id <= 0 {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID"})
+        return
+    }
+
+    vacancy, err := h.store.GetVacancyByID(id)
+    if err != nil {
+        c.JSON(http.StatusNotFound, gin.H{"error": "Vacancy not found"})
+        return
+    }
+
+    c.JSON(http.StatusOK, gin.H{"vacancy": vacancy})
+}
+
+// Создание вакансии (admin/editor)
+func (h *Handler) CreateVacancy(c *gin.Context) {
+    var req models.CreateVacancyRequest
+    if err := c.ShouldBindJSON(&req); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        return
+    }
+
+    v := &models.Vacancy{
+        Position:   req.Position,
+        Experience: req.Experience,
+        Salary:     req.Salary,
+    }
+
+    if err := h.store.CreateVacancy(v); err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create vacancy"})
+        return
+    }
+
+    c.JSON(http.StatusCreated, gin.H{"vacancy": v})
+}
+
+// Обновление вакансии (admin/editor)
+func (h *Handler) UpdateVacancy(c *gin.Context) {
+    id, err := strconv.Atoi(c.Param("id"))
+    if err != nil || id <= 0 {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID"})
+        return
+    }
+
+    var req models.UpdateVacancyRequest
+    if err := c.ShouldBindJSON(&req); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        return
+    }
+
+    v := &models.Vacancy{
+        Position:   ptrOrEmpty(req.Position),
+        Experience: ptrOrEmpty(req.Experience),
+        Salary:     ptrOrEmpty(req.Salary),
+    }
+
+    if err := h.store.UpdateVacancy(id, v); err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update vacancy"})
+        return
+    }
+
+    c.JSON(http.StatusOK, gin.H{"message": "Vacancy updated successfully"})
+}
+
+// Удаление вакансии (admin/editor)
+func (h *Handler) DeleteVacancy(c *gin.Context) {
+    id, err := strconv.Atoi(c.Param("id"))
+    if err != nil || id <= 0 {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID"})
+        return
+    }
+
+    if err := h.store.DeleteVacancy(id); err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete vacancy"})
+        return
+    }
+
+    c.Status(http.StatusNoContent)
+}
+
+// утилита: вернуть значение из *string либо пустую строку
+func ptrOrEmpty(s *string) string {
+    if s == nil {
+        return ""
+    }
+    return *s
+}

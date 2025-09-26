@@ -37,6 +37,10 @@ func RegisterRoutes(r *gin.Engine, s *store.Store, cfg *config.Config) {
         api.GET("/evacuations", h.GetEvacuations)
         api.GET("/evacuation-routes", h.GetEvacuationRoutes)
         api.GET("/traffic-lights", h.GetTrafficLights)
+
+        // Вакансии — публичное чтение
+        api.GET("/vacancies", h.GetVacancies)
+        api.GET("/vacancies/:id", h.GetVacancyByID)
     }
 
     // Админские маршруты (только админ; в дальнейшем можно расширять отдельно)
@@ -69,17 +73,20 @@ func RegisterRoutes(r *gin.Engine, s *store.Store, cfg *config.Config) {
         // Команда
         admin.POST("/team", h.CreateTeam)        // если реализовано
         admin.PUT("/team/:id", h.UpdateTeam)     // если реализовано
-        admin.DELETE("/team/:id", h.DeleteTeam) 
+        admin.DELETE("/team/:id", h.DeleteTeam)
 
         // Проекты
         admin.POST("/projects", h.CreateProject)
         admin.PUT("/projects/:id", h.UpdateProject)
         admin.DELETE("/projects/:id", h.DeleteProject)
+
+        // Вакансии — полный CRUD
+        admin.POST("/vacancies", h.CreateVacancy)
+        admin.PUT("/vacancies/:id", h.UpdateVacancy)
+        admin.DELETE("/vacancies/:id", h.DeleteVacancy)
     }
 
     // Редакторские маршруты: на текущий момент совпадают с админскими
-    // Используем отдельный префикс и отдельную мидлварь RequireEditor()
-    // Позже можно будет сузить права редактора, не трогая админские.
     editor := r.Group("/api/editor", AuthMiddleware(cfg), RequireEditor())
     {
         // Новости
@@ -109,10 +116,16 @@ func RegisterRoutes(r *gin.Engine, s *store.Store, cfg *config.Config) {
         // Команда
         editor.POST("/team", h.CreateTeam)        // если реализовано
         editor.PUT("/team/:id", h.UpdateTeam)     // если реализовано
-        editor.DELETE("/team/:id", h.DeleteTeam) 
+        editor.DELETE("/team/:id", h.DeleteTeam)
+
         // Проекты
         editor.POST("/projects", h.CreateProject)
         editor.PUT("/projects/:id", h.UpdateProject)
         editor.DELETE("/projects/:id", h.DeleteProject)
+
+        // Вакансии — полный CRUD
+        editor.POST("/vacancies", h.CreateVacancy)
+        editor.PUT("/vacancies/:id", h.UpdateVacancy)
+        editor.DELETE("/vacancies/:id", h.DeleteVacancy)
     }
 }

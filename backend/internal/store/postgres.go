@@ -748,3 +748,103 @@ func (s *Store) GetTraffic() (map[string]interface{}, error) {
 
     return res, nil
 }
+
+// Vacancies
+func (s *Store) GetVacancies() ([]models.Vacancy, error) {
+    query := `
+        SELECT id,
+               position,
+               experience,
+               salary,
+               COALESCE(created_at, CURRENT_TIMESTAMP) AS created_at,
+               COALESCE(updated_at, CURRENT_TIMESTAMP) AS updated_at
+        FROM public.vacancies
+        ORDER BY id DESC
+    `
+    rows, err := s.db.Query(query)
+    if err != nil {
+        log.Printf("GetVacancies query err: %v", err)
+        return nil, err
+    }
+    defer rows.Close()
+
+    var out []models.Vacancy
+    for rows.Next() {
+        var v models.Vacancy
+        if err := rows.Scan(&v.ID, &v.Position, &v.Experience, &v.Salary, &v.CreatedAt, &v.UpdatedAt); err != nil {
+            log.Printf("GetVacancies scan err: %v", err)
+            return nil, err
+        }
+        out = append(out, v)
+    }
+    return out, nil
+}
+
+func (s *Store) GetVacancyByID(id int) (*models.Vacancy, error) {
+    query := `
+        SELECT id,
+               position,
+               experience,
+               salary,
+               COALESCE(created_at, CURRENT_TIMESTAMP) AS created_at,
+               COALESCE(updated_at, CURRENT_TIMESTAMP) AS updated_at
+        FROM public.vacancies
+        WHERE id = $1
+    `
+    var v models.Vacancy
+    if err := s.db.QueryRow(query, id).Scan(&v.ID, &v.Position, &v.Experience, &v.Salary, &v.CreatedAt, &v.UpdatedAt); err != nil {
+        if err == sql.ErrNoRows {
+            log.Printf("GetVacancyByID: vacancy id=%d not found", id)
+        } else {
+            log.Printf("GetVacancyByID err: %v", err)
+        }
+        return nil, err
+    }
+    return &v, nil
+}
+
+func (s *Store) CreateVacancy(v *models.Vacancy) error {
+    query := `
+        INSERT INTO public.vacancies (position, experience, salary, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5)
+        RETURNING id
+    `
+    now := time.Now()
+    // В модели Vacancy timestamps как *time.Time? В предыдущем файле модели — да.
+    // Если у тебя *time.Time — устанавливаем адреса значений:
+    v.CreatedAt = &now
+    v.UpdatedAt = &now
+
+    if err := s.db.QueryRow(query, v.Position, v.Experience, v.Salary, v.CreatedAt, v.UpdatedAt).Scan(&v.ID); err != nil {
+        log.Printf("CreateVacancy err: %v", err)
+        return err
+    }
+    return nil
+}
+
+func (s *Store) UpdateVacancy(id int, v *models.Vacancy) error {
+    query := `
+        UPDATE public.vacancies
+        SET position = $2,
+            experience = $3,
+            salary = $4,
+            updated_at = $5
+        WHERE id = $1
+    `
+    now := time.Now()
+    v.UpdatedAt = &now
+
+    if _, err := s.db.Exec(query, id, v.Position, v.Experience, v.Salary, v.UpdatedAt); err != nil {
+        log.Printf("UpdateVacancy err: %v", err)
+        return err
+    }
+    return nil
+}
+
+func (s *Store) DeleteVacancy(id int) error {
+    if _, err := s.db.Exec(`DELETE FROM public.vacancies WHERE id = $1`, id); err != nil {
+        log.Printf("DeleteVacancy err: %v", err)
+        return err
+    }
+    return nil
+}

@@ -28,7 +28,7 @@ func Load() *Config {
 	cfg := &Config{
 		// В контейнере DB_HOST почти всегда "postgres" — имя сервиса в docker-compose
 		DBHost:     getEnv("DB_HOST", "localhost"),
-		DBPort:     getEnv("DB_PORT", "5432"),
+		DBPort:     getEnv("DB_PORT", "5435"),
 		DBUser:     getEnv("DB_USER", "postgres"),
 		DBPassword: getEnv("DB_PASSWORD", "password"),
 		DBName:     getEnv("DB_NAME", "smolathon_db"),

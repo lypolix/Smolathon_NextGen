@@ -94,6 +94,23 @@ CREATE TABLE IF NOT EXISTS projects (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS vacancies (
+    id SERIAL PRIMARY KEY,
+    position VARCHAR(255) NOT NULL,
+    experience TEXT NOT NULL,
+    salary VARCHAR(100) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+
+INSERT INTO vacancies (position, experience, salary) VALUES
+('Backend Go Developer', '3+ года коммерческой разработки, опыт с PostgreSQL, Docker, REST API', 'от 150 000 до 220 000 ₽'),
+('Frontend React Developer', '2+ года, уверенный React/TypeScript, опыт с Vite, работа с REST', 'до 180 000 ₽'),
+('DevOps Engineer', '3+ года, CI/CD, Docker, Compose, базовые навыки мониторинга', 'от 170 000 ₽'),
+('Data Analyst', 'SQL уверенно, опыт агрегаций и отчётов, базовая статистика', 'от 120 000 ₽')
+ON CONFLICT DO NOTHING;
+
 -- Вставка пользователей с открытыми паролями
 INSERT INTO users (email, password, role) VALUES 
 ('admin@smolensk.ru', 'admin123', 'admin'),
