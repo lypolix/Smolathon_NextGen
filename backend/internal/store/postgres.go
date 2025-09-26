@@ -625,6 +625,47 @@ func (s *Store) GetProjects() ([]models.Project, error) {
     return out, nil
 }
 
+// CreateProject
+func (s *Store) CreateProject(p *models.Project) error {
+    query := `
+        INSERT INTO public.projects (title, description, category, status, created_at, updated_at)
+        VALUES ($1,$2,$3,$4,$5,$6)
+        RETURNING id
+    `
+    now := time.Now()
+    p.CreatedAt = now
+    p.UpdatedAt = now
+    if err := s.db.QueryRow(query, p.Title, p.Description, p.Category, p.Status, p.CreatedAt, p.UpdatedAt).Scan(&p.ID); err != nil {
+        log.Printf("CreateProject err: %v", err)
+        return err
+    }
+    return nil
+}
+
+// UpdateProject
+func (s *Store) UpdateProject(id int, p *models.Project) error {
+    query := `
+        UPDATE public.projects
+        SET title=$2, description=$3, category=$4, status=$5, updated_at=$6
+        WHERE id=$1
+    `
+    p.UpdatedAt = time.Now()
+    if _, err := s.db.Exec(query, id, p.Title, p.Description, p.Category, p.Status, p.UpdatedAt); err != nil {
+        log.Printf("UpdateProject err: %v", err)
+        return err
+    }
+    return nil
+}
+
+// DeleteProject
+func (s *Store) DeleteProject(id int) error {
+    if _, err := s.db.Exec(`DELETE FROM public.projects WHERE id=$1`, id); err != nil {
+        log.Printf("DeleteProject err: %v", err)
+        return err
+    }
+    return nil
+}
+
 // Stats
 func (s *Store) GetStats() (map[string]interface{}, error) {
     stats := make(map[string]interface{})

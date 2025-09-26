@@ -631,15 +631,8 @@ func (h *Handler) DeleteTeam(c *gin.Context) {
     c.Status(http.StatusNoContent)
 }
 
-
 // CreateTeam — создать участника команды (admin/editor)
 func (h *Handler) CreateTeam(c *gin.Context) {
-    // Если в проекте уже есть проверка роли, оставь её здесь (например, h.requireRole).
-    // Если проверки нет — можно убрать этот блок.
-    // if !h.requireRole(c, "admin", "editor") {
-    //     return
-    // }
-
     var req models.TeamMember
     if err := c.ShouldBindJSON(&req); err != nil {
         c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -661,7 +654,6 @@ func (h *Handler) CreateTeam(c *gin.Context) {
     c.JSON(http.StatusCreated, gin.H{"team_member": member})
 }
 
-
 // Projects
 func (h *Handler) GetProjects(c *gin.Context) {
     projects, err := h.store.GetProjects()
@@ -671,6 +663,74 @@ func (h *Handler) GetProjects(c *gin.Context) {
     }
 
     c.JSON(http.StatusOK, gin.H{"projects": projects})
+}
+
+// CreateProject
+func (h *Handler) CreateProject(c *gin.Context) {
+    var req models.Project
+    if err := c.ShouldBindJSON(&req); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        return
+    }
+
+    p := &models.Project{
+        Title:       req.Title,
+        Description: req.Description,
+        Category:    req.Category,
+        Status:      req.Status,
+    }
+
+    if err := h.store.CreateProject(p); err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create project"})
+        return
+    }
+
+    c.JSON(http.StatusCreated, gin.H{"project": p})
+}
+
+// UpdateProject
+func (h *Handler) UpdateProject(c *gin.Context) {
+    id, err := strconv.Atoi(c.Param("id"))
+    if err != nil || id <= 0 {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID"})
+        return
+    }
+
+    var req models.Project
+    if err := c.ShouldBindJSON(&req); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        return
+    }
+
+    p := &models.Project{
+        Title:       req.Title,
+        Description: req.Description,
+        Category:    req.Category,
+        Status:      req.Status,
+    }
+
+    if err := h.store.UpdateProject(id, p); err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update project"})
+        return
+    }
+
+    c.JSON(http.StatusOK, gin.H{"message": "Project updated successfully"})
+}
+
+// DeleteProject
+func (h *Handler) DeleteProject(c *gin.Context) {
+    id, err := strconv.Atoi(c.Param("id"))
+    if err != nil || id <= 0 {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID"})
+        return
+    }
+
+    if err := h.store.DeleteProject(id); err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete project"})
+        return
+    }
+
+    c.Status(http.StatusNoContent)
 }
 
 // Stats

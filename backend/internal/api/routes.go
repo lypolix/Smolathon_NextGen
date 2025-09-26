@@ -72,9 +72,9 @@ func RegisterRoutes(r *gin.Engine, s *store.Store, cfg *config.Config) {
         admin.DELETE("/team/:id", h.DeleteTeam) 
 
         // Проекты
-        admin.POST("/projects", func(c *gin.Context) { c.JSON(200, gin.H{"message": "Create project"}) })
-        admin.PUT("/projects/:id", func(c *gin.Context) { c.JSON(200, gin.H{"message": "Update project"}) })
-        admin.DELETE("/projects/:id", func(c *gin.Context) { c.JSON(200, gin.H{"message": "Delete project"}) })
+        admin.POST("/projects", h.CreateProject)
+        admin.PUT("/projects/:id", h.UpdateProject)
+        admin.DELETE("/projects/:id", h.DeleteProject)
     }
 
     // Редакторские маршруты: на текущий момент совпадают с админскими
@@ -111,8 +111,8 @@ func RegisterRoutes(r *gin.Engine, s *store.Store, cfg *config.Config) {
         editor.PUT("/team/:id", h.UpdateTeam)     // если реализовано
         editor.DELETE("/team/:id", h.DeleteTeam) 
         // Проекты
-        editor.POST("/projects", func(c *gin.Context) { c.JSON(200, gin.H{"message": "Create project"}) })
-        editor.PUT("/projects/:id", func(c *gin.Context) { c.JSON(200, gin.H{"message": "Update project"}) })
-        editor.DELETE("/projects/:id", func(c *gin.Context) { c.JSON(200, gin.H{"message": "Delete project"}) })
+        editor.POST("/projects", h.CreateProject)
+        editor.PUT("/projects/:id", h.UpdateProject)
+        editor.DELETE("/projects/:id", h.DeleteProject)
     }
 }
