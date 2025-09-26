@@ -38,21 +38,20 @@ func NewStore(cfg *config.Config) (*Store, error) {
     return &Store{db: db}, nil
 }
 
-func (s *Store) Close() error { return s.db.Close() }
+func (s *Store) Close() error  { return s.db.Close() }
 func (s *Store) GetDB() *sql.DB { return s.db }
 
 // Users
 func (s *Store) GetUserByEmail(email string) (*models.User, error) {
     user := &models.User{}
-    
+
     query := `
         SELECT id, email, password, role, created_at, updated_at 
         FROM users 
         WHERE email = $1
     `
-    
     log.Printf("GetUserByEmail: searching for email '%s'", email)
-    
+
     err := s.db.QueryRow(query, email).Scan(
         &user.ID,
         &user.Email,
@@ -61,7 +60,7 @@ func (s *Store) GetUserByEmail(email string) (*models.User, error) {
         &user.CreatedAt,
         &user.UpdatedAt,
     )
-    
+
     if err != nil {
         if err == sql.ErrNoRows {
             log.Printf("GetUserByEmail: user '%s' not found", email)
@@ -70,13 +69,12 @@ func (s *Store) GetUserByEmail(email string) (*models.User, error) {
         log.Printf("GetUserByEmail error: %v", err)
         return nil, err
     }
-    
-    // Устанавливаем is_active по умолчанию
+
     user.IsActive = true
-    
-    log.Printf("GetUserByEmail: found user ID=%d, email=%s, role=%s", 
+
+    log.Printf("GetUserByEmail: found user ID=%d, email=%s, role=%s",
         user.ID, user.Email, user.Role)
-    
+
     return user, nil
 }
 
@@ -86,7 +84,6 @@ func (s *Store) CreateUser(user *models.User) error {
         VALUES ($1, $2, $3, $4) 
         RETURNING id, created_at, updated_at
     `
-    
     return s.db.QueryRow(
         query,
         user.Email,
@@ -102,12 +99,11 @@ func (s *Store) UpdateUserPassword(userID int, hashedPassword string) error {
         SET password = $1, updated_at = CURRENT_TIMESTAMP 
         WHERE id = $2
     `
-    
     _, err := s.db.Exec(query, hashedPassword, userID)
     return err
 }
 
-// Fines
+// Fines (оставляем time.Time)
 func (s *Store) GetFines() ([]models.Fine, error) {
     query := `
         SELECT id, date, violations_total, orders_total, fines_amount_total, collected_amount_total,
@@ -173,7 +169,7 @@ func (s *Store) DeleteFine(id int) error {
     return nil
 }
 
-// Evacuations
+// Evacuations (оставляем time.Time)
 func (s *Store) GetEvacuations() ([]models.Evacuation, error) {
     query := `
         SELECT id, date, evacuators_count, trips_count, evacuations_count, fine_lot_income,
@@ -216,6 +212,7 @@ func (s *Store) CreateEvacuation(e *models.Evacuation) error {
     return nil
 }
 
+// Evacuation routes (оставляем time.Time)
 func (s *Store) GetEvacuationRoutes() ([]models.EvacuationRoute, error) {
     query := `
         SELECT id, year, month, route,
@@ -256,7 +253,7 @@ func (s *Store) CreateEvacuationRoute(r *models.EvacuationRoute) error {
     return nil
 }
 
-// Traffic lights
+// Traffic lights (оставляем time.Time)
 func (s *Store) GetTrafficLights() ([]models.TrafficLight, error) {
     query := `
         SELECT id, address, light_type, install_year, status,
@@ -319,7 +316,7 @@ func (s *Store) DeleteTrafficLight(id int) error {
     return nil
 }
 
-// News
+// News (оставляем time.Time)
 func (s *Store) GetNews() ([]models.News, error) {
     query := `
         SELECT id, title, content, tag, date,
@@ -344,7 +341,6 @@ func (s *Store) GetNews() ([]models.News, error) {
     return out, nil
 }
 
-// Новый метод для получения новости по ID
 func (s *Store) GetNewsByID(id int) (*models.News, error) {
     query := `
         SELECT id, title, content, tag, date,
@@ -353,12 +349,10 @@ func (s *Store) GetNewsByID(id int) (*models.News, error) {
         FROM public.news
         WHERE id = $1
     `
-    
     var n models.News
     err := s.db.QueryRow(query, id).Scan(
         &n.ID, &n.Title, &n.Content, &n.Tag, &n.Date, &n.CreatedAt, &n.UpdatedAt,
     )
-    
     if err != nil {
         if err == sql.ErrNoRows {
             log.Printf("GetNewsByID: news with id=%d not found", id)
@@ -367,7 +361,6 @@ func (s *Store) GetNewsByID(id int) (*models.News, error) {
         }
         return nil, err
     }
-    
     return &n, nil
 }
 
@@ -410,7 +403,7 @@ func (s *Store) DeleteNews(id int) error {
     return nil
 }
 
-// Services
+// Services (оставляем time.Time)
 func (s *Store) GetServices() ([]models.Service, error) {
     query := `
         SELECT id, title, description, price, category,
@@ -435,7 +428,6 @@ func (s *Store) GetServices() ([]models.Service, error) {
     return out, nil
 }
 
-// Новый метод для получения услуги по ID
 func (s *Store) GetServiceByID(id int) (*models.Service, error) {
     query := `
         SELECT id, title, description, price, category,
@@ -445,12 +437,10 @@ func (s *Store) GetServiceByID(id int) (*models.Service, error) {
         FROM public.services
         WHERE id = $1
     `
-    
     var srv models.Service
     err := s.db.QueryRow(query, id).Scan(
         &srv.ID, &srv.Title, &srv.Description, &srv.Price, &srv.Category, &srv.IconURL, &srv.CreatedAt, &srv.UpdatedAt,
     )
-    
     if err != nil {
         if err == sql.ErrNoRows {
             log.Printf("GetServiceByID: service with id=%d not found", id)
@@ -459,7 +449,6 @@ func (s *Store) GetServiceByID(id int) (*models.Service, error) {
         }
         return nil, err
     }
-    
     return &srv, nil
 }
 
@@ -501,7 +490,7 @@ func (s *Store) DeleteService(id int) error {
     return nil
 }
 
-// Team
+// Team (реализуем создание и обновление; предполагаем timestamps как *time.Time)
 func (s *Store) GetTeam() ([]models.TeamMember, error) {
     query := `
         SELECT id, name, position, experience,
@@ -527,7 +516,6 @@ func (s *Store) GetTeam() ([]models.TeamMember, error) {
     return out, nil
 }
 
-// Новый метод для получения участника команды по ID
 func (s *Store) GetTeamMemberByID(id int) (*models.TeamMember, error) {
     query := `
         SELECT id, name, position, experience,
@@ -537,12 +525,10 @@ func (s *Store) GetTeamMemberByID(id int) (*models.TeamMember, error) {
         FROM public.team
         WHERE id = $1
     `
-    
     var m models.TeamMember
     err := s.db.QueryRow(query, id).Scan(
         &m.ID, &m.Name, &m.Position, &m.Experience, &m.PhotoURL, &m.CreatedAt, &m.UpdatedAt,
     )
-    
     if err != nil {
         if err == sql.ErrNoRows {
             log.Printf("GetTeamMemberByID: team member with id=%d not found", id)
@@ -551,8 +537,68 @@ func (s *Store) GetTeamMemberByID(id int) (*models.TeamMember, error) {
         }
         return nil, err
     }
-    
     return &m, nil
+}
+
+func (s *Store) CreateTeamMember(m *models.TeamMember) error {
+    query := `
+        INSERT INTO public.team (name, position, experience, photo_url, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, $6)
+        RETURNING id
+    `
+    now := time.Now()
+    // если в модели *time.Time:
+    m.CreatedAt = &now
+    m.UpdatedAt = &now
+
+    if err := s.db.QueryRow(query, m.Name, m.Position, m.Experience, m.PhotoURL, m.CreatedAt, m.UpdatedAt).Scan(&m.ID); err != nil {
+        log.Printf("CreateTeamMember err: %v", err)
+        return err
+    }
+    return nil
+}
+
+func (s *Store) UpdateTeam(id int, m *models.TeamMember) (int64, error) {
+    query := `
+        UPDATE public.team
+        SET name=$2, position=$3, experience=$4, photo_url=$5, updated_at=$6
+        WHERE id=$1
+    `
+    now := time.Now()
+    // если в модели *time.Time:
+    m.UpdatedAt = &now
+
+    res, err := s.db.Exec(query, id, m.Name, m.Position, m.Experience, m.PhotoURL, m.UpdatedAt)
+    if err != nil {
+        log.Printf("UpdateTeam err: %v", err)
+        return 0, err
+    }
+    n, _ := res.RowsAffected()
+    if n == 0 {
+        log.Printf("UpdateTeam: team member id=%d not found", id)
+    }
+    return n, nil
+}
+
+func (s *Store) DeleteTeam(id int) error {
+    if _, err := s.db.Exec(`DELETE FROM public.team WHERE id=$1`, id); err != nil {
+        log.Printf("DeleteTeam err: %v", err)
+        return err
+    }
+    return nil
+}
+
+func (s *Store) DeleteTeamByID(id int) (int64, error) {
+    res, err := s.db.Exec(`DELETE FROM public.team WHERE id=$1`, id)
+    if err != nil {
+        log.Printf("DeleteTeamByID err: %v", err)
+        return 0, err
+    }
+    n, _ := res.RowsAffected()
+    if n == 0 {
+        log.Printf("DeleteTeamByID: team member id=%d not found", id)
+    }
+    return n, nil
 }
 
 // Projects
@@ -644,7 +690,6 @@ func (s *Store) GetTraffic() (map[string]interface{}, error) {
     yearQuery := `SELECT install_year, COUNT(*) FROM public.traffic_lights GROUP BY install_year ORDER BY install_year DESC`
     rows, err = s.db.Query(yearQuery)
     if err != nil {
-        // вернем частичный результат
         return res, nil
     }
     defer rows.Close()

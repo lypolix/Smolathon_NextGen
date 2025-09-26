@@ -1,16 +1,18 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
 
 	"backend/config"
 	"backend/internal/api"
@@ -48,35 +50,34 @@ func validateCfg(cfg *config.Config) error {
 	if cfg.Port == "" {
 		return fmt.Errorf("empty API port")
 	}
-	// при необходимости добавить проверки cfg.DB.* и т.д.
+	if cfg.DBHost == "" || cfg.DBPort == "" || cfg.DBUser == "" || cfg.DBName == "" {
+		return fmt.Errorf("incomplete DB config")
+	}
+	if cfg.JWTSecret == "" {
+		return fmt.Errorf("empty JWT secret")
+	}
 	return nil
 }
 
 func main() {
-	// 1) .env (не фатально при отсутствии)
-	if err := godotenv.Load(); err != nil {
-		log.Printf("No .env file found or failed to load: %v", err)
-	}
+	// Конфиг: читает переменные окружения и при наличии .env — подхватывает
+	cfg := config.Load()
 
-	// 2) Логи ENV для БД
+	// Логи ENV для БД (после Load, чтобы видеть итоговые значения)
 	logDBEnv()
 
-	// 3) Конфиг и валидация
-	cfg := config.Load() // предположительно возвращает *config.Config
+	// Валидация конфига
 	if err := validateCfg(cfg); err != nil {
 		log.Fatalf("Invalid config: %v", err)
 	}
 
-	// 4) Режим Gin
-	// Если поля Debug нет в конфиге — используем значение из окружения GIN_MODE.
-	// Можно явно зафиксировать Debug Mode в деве:
+	// Режим Gin (используем GIN_MODE из окружения; по умолчанию debug)
 	if os.Getenv("GIN_MODE") == "" {
-		// Чтобы видеть подробные логи локально
 		gin.SetMode(gin.DebugMode)
 	}
 	log.Printf("Gin mode: %s", gin.Mode())
 
-	// 5) Подключение к БД
+	// Подключение к БД
 	s, err := store.NewStore(cfg)
 	if err != nil {
 		log.Fatal("Failed to connect to database:", err)
@@ -87,14 +88,11 @@ func main() {
 		}
 	}()
 
-	// 6) Роутер с Logger/Recovery
+	// Роутер
 	r := gin.Default()
-
-	// Если RegisterRoutes сам добавляет префикс /api — оставляем как есть.
-	// Если нет — можно обернуть в группу: g := r.Group("/api"); api.RegisterRoutes(g, s, cfg)
 	api.RegisterRoutes(r, s, cfg)
 
-	// 7) HTTP-сервер с таймаутами
+	// HTTP-сервер с таймаутами
 	srv := &http.Server{
 		Addr:           ":" + cfg.Port,
 		Handler:        r,
@@ -104,8 +102,24 @@ func main() {
 		MaxHeaderBytes: 1 << 20,
 	}
 
-	log.Printf("Server starting on port %s", cfg.Port)
-	if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-		log.Fatal("Failed to start server:", err)
+	// Грейсфул-шатдаун
+	go func() {
+		log.Printf("Server starting on port %s", cfg.Port)
+		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			log.Fatal("Failed to start server:", err)
+		}
+	}()
+
+	// Ожидание сигнала для корректного завершения
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
+	<-stop
+
+	log.Println("Shutting down server...")
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	if err := srv.Shutdown(ctx); err != nil {
+		log.Printf("Server shutdown error: %v", err)
 	}
+	log.Println("Server stopped gracefully")
 }

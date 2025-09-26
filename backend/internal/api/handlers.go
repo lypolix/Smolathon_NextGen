@@ -30,7 +30,6 @@ func (h *Handler) AdminLogin(c *gin.Context) {
         return
     }
 
-    // Поиск пользователя
     user, err := h.store.GetUserByEmail(req.Email)
     if err != nil {
         log.Printf("Admin login failed for %s: user not found", req.Email)
@@ -38,21 +37,18 @@ func (h *Handler) AdminLogin(c *gin.Context) {
         return
     }
 
-    // Проверка роли
     if user.Role != "admin" {
         log.Printf("Admin login failed for %s: not admin role (role=%s)", req.Email, user.Role)
         c.JSON(http.StatusForbidden, gin.H{"error": "Admin access required"})
         return
     }
 
-    // Простая проверка пароля БЕЗ хеширования
     if user.Password != req.Password {
         log.Printf("Admin login failed for %s: password mismatch", req.Email)
         c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
         return
     }
 
-    // Создание JWT токена: теперь функция принимает models.User и секрет
     token, err := auth.GenerateToken(*user, h.cfg.JWTSecret)
     if err != nil {
         log.Printf("Failed to generate token for admin %s: %v", req.Email, err)
@@ -62,7 +58,6 @@ func (h *Handler) AdminLogin(c *gin.Context) {
 
     log.Printf("Admin login successful for %s", req.Email)
 
-    // Убираем пароль из ответа
     user.Password = ""
 
     c.JSON(http.StatusOK, models.LoginResponse{
@@ -92,14 +87,12 @@ func (h *Handler) EditorLogin(c *gin.Context) {
         return
     }
 
-    // Простая проверка пароля БЕЗ хеширования
     if user.Password != req.Password {
         log.Printf("Editor login failed for %s: password mismatch", req.Email)
         c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
         return
     }
 
-    // Новая сигнатура GenerateToken
     token, err := auth.GenerateToken(*user, h.cfg.JWTSecret)
     if err != nil {
         log.Printf("Failed to generate token for editor %s: %v", req.Email, err)
@@ -117,7 +110,7 @@ func (h *Handler) EditorLogin(c *gin.Context) {
     })
 }
 
-// Обычный логин (для совместимости)
+// Обычный логин
 func (h *Handler) Login(c *gin.Context) {
     var req models.LoginRequest
     if err := c.ShouldBindJSON(&req); err != nil {
@@ -131,13 +124,11 @@ func (h *Handler) Login(c *gin.Context) {
         return
     }
 
-    // Простая проверка пароля БЕЗ хеширования
     if user.Password != req.Password {
         c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
         return
     }
 
-    // Новая сигнатура GenerateToken
     token, err := auth.GenerateToken(*user, h.cfg.JWTSecret)
     if err != nil {
         c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
@@ -152,7 +143,7 @@ func (h *Handler) Login(c *gin.Context) {
     })
 }
 
-// Fine handlers (без изменений)
+// Fines
 func (h *Handler) GetFines(c *gin.Context) {
     fines, err := h.store.GetFines()
     if err != nil {
@@ -170,11 +161,11 @@ func (h *Handler) CreateFine(c *gin.Context) {
     }
 
     fine := &models.Fine{
-        Date:                  req.Date,
-        ViolationsTotal:       req.ViolationsTotal,
-        OrdersTotal:           req.OrdersTotal,
-        FinesAmountTotal:      req.FinesAmountTotal,
-        CollectedAmountTotal:  req.CollectedAmountTotal,
+        Date:                 req.Date,
+        ViolationsTotal:      req.ViolationsTotal,
+        OrdersTotal:          req.OrdersTotal,
+        FinesAmountTotal:     req.FinesAmountTotal,
+        CollectedAmountTotal: req.CollectedAmountTotal,
     }
 
     if err := h.store.CreateFine(fine); err != nil {
@@ -199,11 +190,11 @@ func (h *Handler) UpdateFine(c *gin.Context) {
     }
 
     fine := &models.Fine{
-        Date:                  req.Date,
-        ViolationsTotal:       req.ViolationsTotal,
-        OrdersTotal:           req.OrdersTotal,
-        FinesAmountTotal:      req.FinesAmountTotal,
-        CollectedAmountTotal:  req.CollectedAmountTotal,
+        Date:                 req.Date,
+        ViolationsTotal:      req.ViolationsTotal,
+        OrdersTotal:          req.OrdersTotal,
+        FinesAmountTotal:     req.FinesAmountTotal,
+        CollectedAmountTotal: req.CollectedAmountTotal,
     }
 
     if err := h.store.UpdateFine(id, fine); err != nil {
@@ -226,10 +217,10 @@ func (h *Handler) DeleteFine(c *gin.Context) {
         return
     }
 
-    c.JSON(http.StatusOK, gin.H{"message": "Fine deleted successfully"})
+    c.Status(http.StatusNoContent)
 }
 
-// Evacuation handlers (без изменений)
+// Evacuations
 func (h *Handler) GetEvacuations(c *gin.Context) {
     evacuations, err := h.store.GetEvacuations()
     if err != nil {
@@ -294,7 +285,7 @@ func (h *Handler) CreateEvacuationRoute(c *gin.Context) {
     c.JSON(http.StatusCreated, gin.H{"evacuation_route": route})
 }
 
-// Traffic Light handlers (без изменений)
+// Traffic lights
 func (h *Handler) GetTrafficLights(c *gin.Context) {
     lights, err := h.store.GetTrafficLights()
     if err != nil {
@@ -371,10 +362,10 @@ func (h *Handler) DeleteTrafficLight(c *gin.Context) {
         return
     }
 
-    c.JSON(http.StatusOK, gin.H{"message": "Traffic light deleted successfully"})
+    c.Status(http.StatusNoContent)
 }
 
-// News handlers - с добавлением GetNewsByID
+// News
 func (h *Handler) GetNews(c *gin.Context) {
     news, err := h.store.GetNews()
     if err != nil {
@@ -385,7 +376,6 @@ func (h *Handler) GetNews(c *gin.Context) {
     c.JSON(http.StatusOK, gin.H{"news": news})
 }
 
-// Новый метод для получения новости по ID
 func (h *Handler) GetNewsByID(c *gin.Context) {
     id, err := strconv.Atoi(c.Param("id"))
     if err != nil {
@@ -462,10 +452,10 @@ func (h *Handler) DeleteNews(c *gin.Context) {
         return
     }
 
-    c.JSON(http.StatusOK, gin.H{"message": "News deleted successfully"})
+    c.Status(http.StatusNoContent)
 }
 
-// Services handlers - с добавлением GetServiceByID
+// Services
 func (h *Handler) GetServices(c *gin.Context) {
     services, err := h.store.GetServices()
     if err != nil {
@@ -476,7 +466,6 @@ func (h *Handler) GetServices(c *gin.Context) {
     c.JSON(http.StatusOK, gin.H{"services": services})
 }
 
-// Новый метод для получения услуги по ID
 func (h *Handler) GetServiceByID(c *gin.Context) {
     id, err := strconv.Atoi(c.Param("id"))
     if err != nil {
@@ -557,10 +546,10 @@ func (h *Handler) DeleteService(c *gin.Context) {
         return
     }
 
-    c.JSON(http.StatusOK, gin.H{"message": "Service deleted successfully"})
+    c.Status(http.StatusNoContent)
 }
 
-// Team handlers - с добавлением GetTeamMemberByID
+// Team
 func (h *Handler) GetTeam(c *gin.Context) {
     team, err := h.store.GetTeam()
     if err != nil {
@@ -571,7 +560,6 @@ func (h *Handler) GetTeam(c *gin.Context) {
     c.JSON(http.StatusOK, gin.H{"team": team})
 }
 
-// Новый метод для получения участника команды по ID
 func (h *Handler) GetTeamMemberByID(c *gin.Context) {
     id, err := strconv.Atoi(c.Param("id"))
     if err != nil {
@@ -588,7 +576,93 @@ func (h *Handler) GetTeamMemberByID(c *gin.Context) {
     c.JSON(http.StatusOK, gin.H{"team_member": member})
 }
 
-// Projects handlers (без изменений)
+// Update team member (admin/editor)
+func (h *Handler) UpdateTeam(c *gin.Context) {
+    id, err := strconv.Atoi(c.Param("id"))
+    if err != nil || id <= 0 {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID"})
+        return
+    }
+
+    var req models.TeamMember
+    if err := c.ShouldBindJSON(&req); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        return
+    }
+
+    member := &models.TeamMember{
+        Name:       req.Name,
+        Position:   req.Position,
+        Experience: req.Experience,
+        PhotoURL:   req.PhotoURL,
+    }
+
+    affected, err := h.store.UpdateTeam(id, member)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update team member"})
+        return
+    }
+    if affected == 0 {
+        c.JSON(http.StatusNotFound, gin.H{"error": "Team member not found"})
+        return
+    }
+
+    c.JSON(http.StatusOK, gin.H{"message": "Team member updated successfully"})
+}
+
+// Delete team member (admin/editor)
+func (h *Handler) DeleteTeam(c *gin.Context) {
+    id, err := strconv.Atoi(c.Param("id"))
+    if err != nil || id <= 0 {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID"})
+        return
+    }
+
+    affected, err := h.store.DeleteTeamByID(id)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete team member"})
+        return
+    }
+    if affected == 0 {
+        c.JSON(http.StatusNotFound, gin.H{"error": "Team member not found"})
+        return
+    }
+
+    c.Status(http.StatusNoContent)
+}
+
+
+// CreateTeam — создать участника команды (admin/editor)
+func (h *Handler) CreateTeam(c *gin.Context) {
+    // Если в проекте уже есть проверка роли, оставь её здесь (например, h.requireRole).
+    // Если проверки нет — можно убрать этот блок.
+    // if !h.requireRole(c, "admin", "editor") {
+    //     return
+    // }
+
+    var req models.TeamMember
+    if err := c.ShouldBindJSON(&req); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        return
+    }
+
+    member := &models.TeamMember{
+        Name:       req.Name,
+        Position:   req.Position,
+        Experience: req.Experience,
+        PhotoURL:   req.PhotoURL,
+    }
+
+    if err := h.store.CreateTeamMember(member); err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create team member"})
+        return
+    }
+
+    c.JSON(http.StatusCreated, gin.H{"team_member": member})
+}
+
+
+// Projects
 func (h *Handler) GetProjects(c *gin.Context) {
     projects, err := h.store.GetProjects()
     if err != nil {
@@ -599,7 +673,7 @@ func (h *Handler) GetProjects(c *gin.Context) {
     c.JSON(http.StatusOK, gin.H{"projects": projects})
 }
 
-// Stats handlers (без изменений)
+// Stats
 func (h *Handler) GetStats(c *gin.Context) {
     stats, err := h.store.GetStats()
     if err != nil {
@@ -610,7 +684,7 @@ func (h *Handler) GetStats(c *gin.Context) {
     c.JSON(http.StatusOK, gin.H{"stats": stats})
 }
 
-// Traffic handlers (без изменений)
+// Traffic
 func (h *Handler) GetTraffic(c *gin.Context) {
     traffic, err := h.store.GetTraffic()
     if err != nil {

@@ -8,10 +8,10 @@ import (
 
 func RegisterRoutes(r *gin.Engine, s *store.Store, cfg *config.Config) {
     r.Use(CORSMiddleware())
-    
+
     h := NewHandler(s, cfg)
 
-    // Аутентификация - раздельные эндпоинты + общий
+    // Аутентификация — раздельные эндпоинты + общий
     auth := r.Group("/api/auth")
     {
         auth.POST("/admin/login", h.AdminLogin)
@@ -19,28 +19,28 @@ func RegisterRoutes(r *gin.Engine, s *store.Store, cfg *config.Config) {
         auth.POST("/login", h.Login) // общий логин
     }
 
-    // Публичные маршруты (доступны всем без авторизации)
+    // Публичные маршруты (без авторизации)
     api := r.Group("/api")
     {
         api.GET("/news", h.GetNews)
-        api.GET("/news/:id", h.GetNewsByID)           // Получить новость по ID
+        api.GET("/news/:id", h.GetNewsByID)
         api.GET("/services", h.GetServices)
-        api.GET("/services/:id", h.GetServiceByID)    // Получить услугу по ID
+        api.GET("/services/:id", h.GetServiceByID)
         api.GET("/team", h.GetTeam)
-        api.GET("/team/:id", h.GetTeamMemberByID)     // Получить участника команды по ID
+        api.GET("/team/:id", h.GetTeamMemberByID)
         api.GET("/projects", h.GetProjects)
         api.GET("/stats", h.GetStats)
         api.GET("/traffic", h.GetTraffic)
-        
-        // Данные из Excel - публичные
+
+        // Данные из Excel — публичные
         api.GET("/fines", h.GetFines)
         api.GET("/evacuations", h.GetEvacuations)
         api.GET("/evacuation-routes", h.GetEvacuationRoutes)
         api.GET("/traffic-lights", h.GetTrafficLights)
     }
 
-    // Админские маршруты
-    admin := r.Group("/api/admin", AuthMiddleware(cfg), RequireRole("admin"))
+    // Админские маршруты (только админ; в дальнейшем можно расширять отдельно)
+    admin := r.Group("/api/admin", AuthMiddleware(cfg), RequireAdmin())
     {
         // Новости
         admin.POST("/news", h.CreateNews)
@@ -67,9 +67,9 @@ func RegisterRoutes(r *gin.Engine, s *store.Store, cfg *config.Config) {
         admin.DELETE("/traffic-lights/:id", h.DeleteTrafficLight)
 
         // Команда
-        admin.POST("/team", func(c *gin.Context) { c.JSON(200, gin.H{"message": "Create team member"}) })
-        admin.PUT("/team/:id", func(c *gin.Context) { c.JSON(200, gin.H{"message": "Update team member"}) })
-        admin.DELETE("/team/:id", func(c *gin.Context) { c.JSON(200, gin.H{"message": "Delete team member"}) })
+        admin.POST("/team", h.CreateTeam)        // если реализовано
+        admin.PUT("/team/:id", h.UpdateTeam)     // если реализовано
+        admin.DELETE("/team/:id", h.DeleteTeam) 
 
         // Проекты
         admin.POST("/projects", func(c *gin.Context) { c.JSON(200, gin.H{"message": "Create project"}) })
@@ -77,16 +77,42 @@ func RegisterRoutes(r *gin.Engine, s *store.Store, cfg *config.Config) {
         admin.DELETE("/projects/:id", func(c *gin.Context) { c.JSON(200, gin.H{"message": "Delete project"}) })
     }
 
-    // Редакторские маршруты (ограниченные права)
-    editor := r.Group("/api/editor", AuthMiddleware(cfg), RequireRole("editor"))
+    // Редакторские маршруты: на текущий момент совпадают с админскими
+    // Используем отдельный префикс и отдельную мидлварь RequireEditor()
+    // Позже можно будет сузить права редактора, не трогая админские.
+    editor := r.Group("/api/editor", AuthMiddleware(cfg), RequireEditor())
     {
+        // Новости
         editor.POST("/news", h.CreateNews)
         editor.PUT("/news/:id", h.UpdateNews)
+        editor.DELETE("/news/:id", h.DeleteNews)
+
+        // Услуги
+        editor.POST("/services", h.CreateService)
+        editor.PUT("/services/:id", h.UpdateService)
+        editor.DELETE("/services/:id", h.DeleteService)
+
+        // Штрафы
         editor.POST("/fines", h.CreateFine)
         editor.PUT("/fines/:id", h.UpdateFine)
+        editor.DELETE("/fines/:id", h.DeleteFine)
+
+        // Эвакуация
         editor.POST("/evacuations", h.CreateEvacuation)
         editor.POST("/evacuation-routes", h.CreateEvacuationRoute)
+
+        // Светофоры
         editor.POST("/traffic-lights", h.CreateTrafficLight)
         editor.PUT("/traffic-lights/:id", h.UpdateTrafficLight)
+        editor.DELETE("/traffic-lights/:id", h.DeleteTrafficLight)
+
+        // Команда
+        editor.POST("/team", h.CreateTeam)        // если реализовано
+        editor.PUT("/team/:id", h.UpdateTeam)     // если реализовано
+        editor.DELETE("/team/:id", h.DeleteTeam) 
+        // Проекты
+        editor.POST("/projects", func(c *gin.Context) { c.JSON(200, gin.H{"message": "Create project"}) })
+        editor.PUT("/projects/:id", func(c *gin.Context) { c.JSON(200, gin.H{"message": "Update project"}) })
+        editor.DELETE("/projects/:id", func(c *gin.Context) { c.JSON(200, gin.H{"message": "Delete project"}) })
     }
 }

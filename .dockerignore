@@ -1,0 +1,16 @@
+.git
+.gitignore
+node_modules
+frontend
+**/*.log
+dist
+build
+.tmp
+.cache
+.env
+.env.local
+*.jpg
+*.jpeg
+*.png
+*.pdf
+*.xlsx
