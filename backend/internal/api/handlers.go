@@ -374,11 +374,28 @@ func (h *Handler) DeleteTrafficLight(c *gin.Context) {
     c.JSON(http.StatusOK, gin.H{"message": "Traffic light deleted successfully"})
 }
 
-// News handlers (без изменений)
+// News handlers - с добавлением GetNewsByID
 func (h *Handler) GetNews(c *gin.Context) {
     news, err := h.store.GetNews()
     if err != nil {
         c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get news"})
+        return
+    }
+
+    c.JSON(http.StatusOK, gin.H{"news": news})
+}
+
+// Новый метод для получения новости по ID
+func (h *Handler) GetNewsByID(c *gin.Context) {
+    id, err := strconv.Atoi(c.Param("id"))
+    if err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID"})
+        return
+    }
+
+    news, err := h.store.GetNewsByID(id)
+    if err != nil {
+        c.JSON(http.StatusNotFound, gin.H{"error": "News not found"})
         return
     }
 
@@ -448,7 +465,7 @@ func (h *Handler) DeleteNews(c *gin.Context) {
     c.JSON(http.StatusOK, gin.H{"message": "News deleted successfully"})
 }
 
-// Services handlers (без изменений)
+// Services handlers - с добавлением GetServiceByID
 func (h *Handler) GetServices(c *gin.Context) {
     services, err := h.store.GetServices()
     if err != nil {
@@ -457,6 +474,23 @@ func (h *Handler) GetServices(c *gin.Context) {
     }
 
     c.JSON(http.StatusOK, gin.H{"services": services})
+}
+
+// Новый метод для получения услуги по ID
+func (h *Handler) GetServiceByID(c *gin.Context) {
+    id, err := strconv.Atoi(c.Param("id"))
+    if err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID"})
+        return
+    }
+
+    service, err := h.store.GetServiceByID(id)
+    if err != nil {
+        c.JSON(http.StatusNotFound, gin.H{"error": "Service not found"})
+        return
+    }
+
+    c.JSON(http.StatusOK, gin.H{"service": service})
 }
 
 func (h *Handler) CreateService(c *gin.Context) {
@@ -526,7 +560,7 @@ func (h *Handler) DeleteService(c *gin.Context) {
     c.JSON(http.StatusOK, gin.H{"message": "Service deleted successfully"})
 }
 
-// Team handlers (без изменений)
+// Team handlers - с добавлением GetTeamMemberByID
 func (h *Handler) GetTeam(c *gin.Context) {
     team, err := h.store.GetTeam()
     if err != nil {
@@ -535,6 +569,23 @@ func (h *Handler) GetTeam(c *gin.Context) {
     }
 
     c.JSON(http.StatusOK, gin.H{"team": team})
+}
+
+// Новый метод для получения участника команды по ID
+func (h *Handler) GetTeamMemberByID(c *gin.Context) {
+    id, err := strconv.Atoi(c.Param("id"))
+    if err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID"})
+        return
+    }
+
+    member, err := h.store.GetTeamMemberByID(id)
+    if err != nil {
+        c.JSON(http.StatusNotFound, gin.H{"error": "Team member not found"})
+        return
+    }
+
+    c.JSON(http.StatusOK, gin.H{"team_member": member})
 }
 
 // Projects handlers (без изменений)

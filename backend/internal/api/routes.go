@@ -23,8 +23,11 @@ func RegisterRoutes(r *gin.Engine, s *store.Store, cfg *config.Config) {
     api := r.Group("/api")
     {
         api.GET("/news", h.GetNews)
+        api.GET("/news/:id", h.GetNewsByID)           // Получить новость по ID
         api.GET("/services", h.GetServices)
+        api.GET("/services/:id", h.GetServiceByID)    // Получить услугу по ID
         api.GET("/team", h.GetTeam)
+        api.GET("/team/:id", h.GetTeamMemberByID)     // Получить участника команды по ID
         api.GET("/projects", h.GetProjects)
         api.GET("/stats", h.GetStats)
         api.GET("/traffic", h.GetTraffic)

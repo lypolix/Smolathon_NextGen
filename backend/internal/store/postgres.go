@@ -58,7 +58,6 @@ func (s *Store) GetUserByEmail(email string) (*models.User, error) {
         &user.Email,
         &user.Password,
         &user.Role,
-        // &user.IsActive,  ← Убрать эту строку
         &user.CreatedAt,
         &user.UpdatedAt,
     )
@@ -80,8 +79,6 @@ func (s *Store) GetUserByEmail(email string) (*models.User, error) {
     
     return user, nil
 }
-
-
 
 func (s *Store) CreateUser(user *models.User) error {
     query := `
@@ -109,6 +106,7 @@ func (s *Store) UpdateUserPassword(userID int, hashedPassword string) error {
     _, err := s.db.Exec(query, hashedPassword, userID)
     return err
 }
+
 // Fines
 func (s *Store) GetFines() ([]models.Fine, error) {
     query := `
@@ -346,6 +344,33 @@ func (s *Store) GetNews() ([]models.News, error) {
     return out, nil
 }
 
+// Новый метод для получения новости по ID
+func (s *Store) GetNewsByID(id int) (*models.News, error) {
+    query := `
+        SELECT id, title, content, tag, date,
+               COALESCE(created_at, CURRENT_TIMESTAMP) AS created_at,
+               COALESCE(updated_at, CURRENT_TIMESTAMP) AS updated_at
+        FROM public.news
+        WHERE id = $1
+    `
+    
+    var n models.News
+    err := s.db.QueryRow(query, id).Scan(
+        &n.ID, &n.Title, &n.Content, &n.Tag, &n.Date, &n.CreatedAt, &n.UpdatedAt,
+    )
+    
+    if err != nil {
+        if err == sql.ErrNoRows {
+            log.Printf("GetNewsByID: news with id=%d not found", id)
+        } else {
+            log.Printf("GetNewsByID err: %v", err)
+        }
+        return nil, err
+    }
+    
+    return &n, nil
+}
+
 func (s *Store) CreateNews(n *models.News) error {
     query := `
         INSERT INTO public.news (title, content, tag, date, created_at, updated_at)
@@ -410,6 +435,34 @@ func (s *Store) GetServices() ([]models.Service, error) {
     return out, nil
 }
 
+// Новый метод для получения услуги по ID
+func (s *Store) GetServiceByID(id int) (*models.Service, error) {
+    query := `
+        SELECT id, title, description, price, category,
+               COALESCE(icon_url, '') AS icon_url,
+               COALESCE(created_at, CURRENT_TIMESTAMP) AS created_at,
+               COALESCE(updated_at, CURRENT_TIMESTAMP) AS updated_at
+        FROM public.services
+        WHERE id = $1
+    `
+    
+    var srv models.Service
+    err := s.db.QueryRow(query, id).Scan(
+        &srv.ID, &srv.Title, &srv.Description, &srv.Price, &srv.Category, &srv.IconURL, &srv.CreatedAt, &srv.UpdatedAt,
+    )
+    
+    if err != nil {
+        if err == sql.ErrNoRows {
+            log.Printf("GetServiceByID: service with id=%d not found", id)
+        } else {
+            log.Printf("GetServiceByID err: %v", err)
+        }
+        return nil, err
+    }
+    
+    return &srv, nil
+}
+
 func (s *Store) CreateService(srv *models.Service) error {
     query := `
         INSERT INTO public.services (title, description, price, category, icon_url, created_at, updated_at)
@@ -450,7 +503,6 @@ func (s *Store) DeleteService(id int) error {
 
 // Team
 func (s *Store) GetTeam() ([]models.TeamMember, error) {
-    // COALESCE для nullable колонок (photo_url, created_at, updated_at) — чтобы не падать на scan
     query := `
         SELECT id, name, position, experience,
                photo_url,
@@ -473,6 +525,34 @@ func (s *Store) GetTeam() ([]models.TeamMember, error) {
         out = append(out, m)
     }
     return out, nil
+}
+
+// Новый метод для получения участника команды по ID
+func (s *Store) GetTeamMemberByID(id int) (*models.TeamMember, error) {
+    query := `
+        SELECT id, name, position, experience,
+               photo_url,
+               created_at,
+               updated_at
+        FROM public.team
+        WHERE id = $1
+    `
+    
+    var m models.TeamMember
+    err := s.db.QueryRow(query, id).Scan(
+        &m.ID, &m.Name, &m.Position, &m.Experience, &m.PhotoURL, &m.CreatedAt, &m.UpdatedAt,
+    )
+    
+    if err != nil {
+        if err == sql.ErrNoRows {
+            log.Printf("GetTeamMemberByID: team member with id=%d not found", id)
+        } else {
+            log.Printf("GetTeamMemberByID err: %v", err)
+        }
+        return nil, err
+    }
+    
+    return &m, nil
 }
 
 // Projects
