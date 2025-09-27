@@ -16,7 +16,7 @@ import type {
 } from "../../types";
 import type { AxiosResponse } from "axios";
 
-export const API_PUBLIC = `http://localhost:8080/api`;
+export const API_PUBLIC = `http://37.77.106.87/api`;
 const $api = axios.create({
   withCredentials: true,
   baseURL: API_PUBLIC,
