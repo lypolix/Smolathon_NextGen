@@ -1,20 +1,9 @@
 import { Header } from "../Header/Header";
 import "./Vacancies.css";
-import { useState, useEffect } from "react";
-import PublicService from "../../backendConnection/publicInfo/publicInfoService";
-import type { Team } from "../../types";
 import { useNavigate } from "react-router-dom";
 export function Vacancies() {
-  const [team, setTeam] = useState<Team[] | undefined>(undefined);
   const navigate=useNavigate()
-  useEffect(() => {
-    const getAllTeam = async () => {
-      const result = await PublicService.getTeamInfo();
-      setTeam(result);
-      console.log(result);
-    };
-    getAllTeam();
-  }, []);
+  
   return (
     <>
       <button onClick={()=>navigate("/team")} className="vacanciesBackButton">Назад</button>

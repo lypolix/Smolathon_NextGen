@@ -18,7 +18,7 @@ export function Team() {
     getAllTeam();
   }, []);
 
-  // Берём последние 3 человека
+
   const lastThreeTeamMembers: Team[] = team?.team.slice(-3).reverse() ?? [];
 
   return (
