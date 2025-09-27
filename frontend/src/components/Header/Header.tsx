@@ -72,7 +72,7 @@ export const Header = observer(
               style={{ backgroundColor: buttonColor }}
               onClick={() => setShowDropdown((prev) => !prev)}
               onMouseEnter={() => setShowDropdown(true)}
-              onMouseLeave={() => setShowDropdown(false)}
+              //onMouseLeave={() => setShowDropdown(false)}
             >
               Вход
             </button>
