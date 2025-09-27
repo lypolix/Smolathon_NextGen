@@ -2,85 +2,145 @@ import { Header } from "../Header/Header";
 import "./Services.css";
 import { useState, useEffect } from "react";
 import PublicService from "../../backendConnection/publicInfo/publicInfoService";
-import type { Services as Service } from "../../types";
-
-// Тип ответа от API: { services: Service[] }
-type ServicesResponse = { services: Service[] };
+import type { ServicesResponse } from "../../types";
+import { useNavigate } from "react-router-dom";
 
 export function Services() {
-  const [services, setServices] = useState<Service[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const [services, setServices] = useState<ServicesResponse | undefined>(undefined);
 
   useEffect(() => {
     const getAllServices = async () => {
-      try {
-        setLoading(true);
-        const result = await PublicService.getServicesInfo();
-
-        // Нормализация: поддерживаем и { services: [...] }, и просто массив на всякий случай
-        const data: Service[] = Array.isArray(result)
-          ? (result as Service[])
-          : Array.isArray((result as ServicesResponse)?.services)
-          ? (result as ServicesResponse).services
-          : [];
-
-        setServices(data);
-      } catch (e: any) {
-        setError(e?.message || "Ошибка загрузки услуг");
-        setServices([]);
-      } finally {
-        setLoading(false);
-      }
+      const result = await PublicService.getServicesInfo();
+      setServices(result);
+      console.log(result);
     };
     getAllServices();
   }, []);
 
+  // последние 4 услуги
+  const lastServices = services?.services.slice(-4) ?? [];
+
   return (
     <div className="serve-page">
       <div className="container">
-        <Header menuBgColor="white" textColor="#203716" activeTextColor="white" />
-
+        <Header
+          menuBgColor="white"
+          textColor="#203716"
+          activeTextColor="white"
+        />
         <h1 className="serve-pageHeading">Услуги</h1>
 
-        {loading && <div>Загрузка...</div>}
-        {error && <div className="error">{error}</div>}
-
-        {/* Важно: services-list станет grid/flex с gap в CSS */}
-        <div className="services-list">
-          {services.map((s) => (
-            // Важно: serve1 получит фикс ширину/паддинги/бордер-радиус и margin/gap в CSS
-            <div className="serve1" key={s.id}>
-              <div className="serve1Block1">
-                <div className="serve1Block1Heading">
-                  <h2 className="serve1Block1HeadingText">{s.title}</h2>
-                  <div className="serve1Block1HeadingCost">
-                    {Intl.NumberFormat("ru-RU").format(s.price)} ₽
-                  </div>
-                </div>
-
-                <p className="serve1Block1Description">{s.description}</p>
-
-                {s.icon_url && s.icon_url.trim().length > 0 && (
-                  <div
-                    className="serve1Icon"
-                    style={{ backgroundImage: `url(${s.icon_url})` }}
-                    aria-label={s.title}
-                  />
-                )}
+        {/* Блок 1 */}
+        <div className="serve1">
+          <div className="serve1Block1">
+            <div className="serve1Block1Heading">
+              <h2 className="serve1Block1HeadingText">
+                {lastServices[0]?.title ?? "Название услуги"}
+              </h2>
+              <div className="serve1Block1HeadingCost">
+                {lastServices[0]?.price
+                  ? `${lastServices[0].price} ₽`
+                  : "Цена не указана"}
               </div>
-
-              <button className="serve1Button">Купить</button>
             </div>
-          ))}
-
-          {!loading && !error && services.length === 0 && (
-            <div>Список услуг пуст.</div>
-          )}
+            <p className="serve1Block1Description">
+              {lastServices[0]?.description ?? "Описание услуги"}
+            </p>
+          </div>
+          <button
+            onClick={() =>
+              lastServices[0] && navigate(`/services/${lastServices[0].id}`)
+            }
+            className="serve1Button"
+          >
+            Купить
+          </button>
         </div>
 
-        {/* Синий блок снизу создаёт артефакт — в Services.css нужно убрать фон/высоту у .serve2 */}
-        <div className="serve2" aria-hidden="true"></div>
+        {/* Блоки 2–4 */}
+        <div className="servesInLine">
+          <div className="serve2">
+            <div className="serve2Container">
+              <div className="serve2ContainerHeading">
+                <div className="serve2ContainerHeadingName">
+                  {lastServices[1]?.title ?? "Название услуги"}
+                </div>
+                <div className="serve2ContainerHeadingCost">
+                  {lastServices[1]?.price
+                    ? `${lastServices[1].price} ₽`
+                    : "Цена не указана"}
+                </div>
+              </div>
+              <img className="serve2car" src="/car3d.png" />
+              <div className="serve2Content">
+                {lastServices[1]?.description ?? "Описание услуги"}
+              </div>
+            </div>
+            <button
+              onClick={() =>
+                lastServices[1] && navigate(`/services/${lastServices[1].id}`)
+              }
+              className="serve2Button"
+            >
+              Купить
+            </button>
+          </div>
+
+          <div className="serve3">
+            <div className="serve2Container">
+              <div className="serve2ContainerHeading">
+                <div className="serve2ContainerHeadingName">
+                  {lastServices[2]?.title ?? "Название услуги"}
+                </div>
+                <div className="serve2ContainerHeadingCost">
+                  {lastServices[2]?.price
+                    ? `${lastServices[2].price} ₽`
+                    : "Цена не указана"}
+                </div>
+              </div>
+              <img className="serve2car" src="/car3d2.png" />
+              <div className="serve2Content">
+                {lastServices[2]?.description ?? "Описание услуги"}
+              </div>
+            </div>
+            <button
+              onClick={() =>
+                lastServices[2] && navigate(`/services/${lastServices[2].id}`)
+              }
+              className="serve2Button"
+            >
+              Купить
+            </button>
+          </div>
+
+          <div className="serve4">
+            <div className="serve2Container">
+              <div className="serve2ContainerHeading">
+                <div className="serve2ContainerHeadingName">
+                  {lastServices[3]?.title ?? "Название услуги"}
+                </div>
+                <div className="serve2ContainerHeadingCost">
+                  {lastServices[3]?.price
+                    ? `${lastServices[3].price} ₽`
+                    : "Цена не указана"}
+                </div>
+              </div>
+              <img className="serve2car" src="thing.png" />
+              <div className="serve2Content">
+                {lastServices[3]?.description ?? "Описание услуги"}
+              </div>
+            </div>
+            <button
+              onClick={() =>
+                lastServices[3] && navigate(`/services/${lastServices[3].id}`)
+              }
+              className="serve2Button"
+            >
+              Купить
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );

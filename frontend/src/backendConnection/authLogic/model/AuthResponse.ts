@@ -1,6 +1,11 @@
-import type { Admin1 } from "../../types";
- export interface AuthResponse{
-    accessToken: string;
-    refreshToken: string;
-    admin: Admin1;
- }
+export interface AuthResponse {
+  token: string;
+  user: {
+    id: number;
+    email: string;
+    role: "admin" | "editor";
+    is_active: boolean;
+    created_at: string;
+    updated_at: string;
+  };
+}

@@ -2,7 +2,8 @@ import "./EntranceChoice.css";
 import { usePopup } from "../PopupContext";
 
 export function EntranceChoice() {
-  const { openPopupEditor, openPopupAdmin } = usePopup();
+  const { openPopupEditor } = usePopup();
+  const { openPopupAdmin } = usePopup();
 
   return (
     <div className="entranceChoiceBlock">

@@ -1,0 +1,87 @@
+.projectsHeading {
+  font-family: Bold1;
+  font-size: 48px;
+  color: #203716;
+  margin-top: 19px;
+  margin-bottom: 0px;
+}
+.project1 {
+  margin-left: 100px;
+  margin-top: 32px;
+  width: 1070px;
+  height: 178px;
+  box-sizing: border-box;
+  border-radius: 22px;
+  justify-content: space-between;
+  padding: 12px 48px;
+  background: linear-gradient(to right, #b3d0ff, #122a52);
+}
+.project1Heading {
+  font-family: SemiBold1;
+  font-size: 32px;
+  color: #fcfffa;
+  margin-top: 13px;
+  margin-bottom: 0px;
+}
+.project1Content {
+  margin-top: 13px;
+  font-family: Medium1;
+  font-size: 20px;
+  color: #fcfffa;
+}
+.projectsInLine {
+  margin-top: 19px;
+  display: flex;
+  gap: 13px;
+  margin-left: 100px;
+}
+.project2 {
+  box-sizing: border-box;
+  background: linear-gradient(to right, #86fc79, #0a6600);
+  width: 348px;
+  height: 329px;
+  border-radius: 22px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 24px 32px;
+}
+.project2Heading {
+  margin-top: 0px;
+  font-family: SemiBold1;
+  font-size: 24px;
+  width: 145px;
+  color: #fcfffa;
+  margin-bottom: 0px;
+}
+.project2Content {
+    
+  font-family: Medium1;
+  font-size: 20px;
+  color: #fcfffa;
+  width: 278px;
+  margin-top: 0px;
+  margin-bottom: 0px;
+}
+.project3 {
+  box-sizing: border-box;
+  background: linear-gradient(to right, #dddddd, #424242);
+  width: 348px;
+  height: 329px;
+  border-radius: 22px;
+  justify-content: space-between;
+  padding: 24px 32px;
+  display: flex;
+  flex-direction: column;
+}
+.project4 {
+  background: linear-gradient(to right, #fff187, #db8300);
+  width: 348px;
+  height: 329px;
+  border-radius: 22px;
+  justify-content: space-between;
+  padding: 24px 32px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}

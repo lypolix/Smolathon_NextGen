@@ -10,30 +10,26 @@
   max-width: 1280px;
   margin: 0 auto;
 }
-
 .contentNews {
   width: 1280px;
   height: 616px;
   gap: 42px;
   padding: 66px 100px;
 }
-
 .headingNews {
   display: flex;
   width: 1070px;
   justify-content: space-between;
 }
-
 .headingNameNews {
   font-family: Bold1;
   font-size: 48px;
+  max-width: 612px;
 }
-
 .noNewsMessage{
   font-family: Bold1;
   font-size: 38px;
 }
-
 .headingButtonNews {
   width: 143px;
   height: 50px;
@@ -44,52 +40,30 @@
   font-family: Medium1;
   border: none;
 }
-
+.headingButtonNews:hover{
+  background: #62A744;
+}
 .blocksNews {
   width: 1070px;
   justify-content: space-between;
   display: flex;
   margin-top: 42px;
 }
-
 .blockNews1 {
-  position: relative;           /* для фонового псевдоэлемента */
   width: 258px;
   border-radius: 28px;
   justify-content: space-between;
   padding: 16px 20px;
   display: grid;
-  background: #d9d9d9;          /* базовый фон на случай отсутствия картинки */
+  background: #d9d9d9;
   box-sizing: border-box;
-  overflow: hidden;              /* чтобы фон не выходил за скругление */
 }
-
-/* Дефолтная картинка для новости из public/road.jpg */
-.blockNews1::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background-image: url("/road.jpg");
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  opacity: 0.22;                 /* мягкий фон, чтобы текст читался */
-  z-index: 0;
-}
-
-/* Весь контент внутри карточки поверх фонового изображения */
-.blockNews1 > * {
-  position: relative;
-  z-index: 1;
-}
-
 .headingBlockNews {
   justify-content: space-between;
   display: flex;
   height: 36px;
   align-items: center;
 }
-
 .heading1BlockNews {
   border-radius: 20px;
   font-family: SemiBold1;
@@ -97,38 +71,32 @@
   padding: 10px 16px;
   background-color: #fcfffa;
 }
-
 .headingDateNews {
   font-family: SemiBold1;
   font-weight: 600;
   font-size: 15px;
   color: #62a744;
 }
-
 .contentBlockNews {
   margin-top: 200px;
   gap: 10px;
   display: grid;
   width: 218px;
 }
-
 .contentBlockNews1 {
   gap: 6px;
   height: auto;
 }
-
 .headingContentBlockNews {
   font-family: Medium1;
   font-size: 16px;
   color: black;
 }
-
 .textContentBlockNews {
   font-family: Medium1;
   font-size: 13px;
   color: #969595;
 }
-
 .contentBlockNewsButton {
   width: 121px;
   border-radius: 20px;
@@ -139,4 +107,8 @@
   font-size: 16px;
   border: none;
   justify-self: center;
+}
+
+.contentBlockNewsButton:hover{
+  background: #35731b;
 }

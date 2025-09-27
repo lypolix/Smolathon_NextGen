@@ -1,149 +1,279 @@
-/* Контейнер страницы */
 .serve-page {
-  min-height: 100vh;        /* чтобы контент сам задавал высоту */
+  height: 100vh;
   width: 100%;
   background: white;
   background-size: cover;
-  display: block;           /* убираем flex, чтобы не тянуть блоки */
+  display: flex;
 }
-
-/* Заголовок страницы */
 .serve-pageHeading {
   font-family: Bold1;
   margin-top: 42px;
   font-size: 48px;
   color: #203716;
 }
-
-/* Список услуг — создаем сетку с зазорами */
-.services-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 16px;                /* расстояние между карточками */
-  padding: 16px 100px;      /* выравнивание по левому краю как было margin-left:100px */
-  box-sizing: border-box;
-}
-
-/* Карточка услуги */
 .serve1 {
-  position: relative;       /* для псевдоэлемента с bg */
-  width: 100%;
-  max-width: 1040px;
-  margin: 0;
-  min-height: 160px;
-  height: auto;
-  border-radius: 22px;
-  padding: 16px 24px;
-  background: linear-gradient(to right, #62a744, #216802);
   box-sizing: border-box;
-  overflow: hidden;         /* чтобы фон не выходил за скругления */
+  width: 1070px;
+  margin-left: 100px;
+  height: 200px;
+  border-radius: 22px;
+  padding: 12px 48px;
+  background: linear-gradient(to right, #62a744, #216802);
 }
-
-/* Дефолтная картинка из public/road.jpg под контентом карточки */
-.serve1::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background-image: url("/road.jpg");
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  opacity: 0.18;            /* легкий фон, чтобы текст читался */
-  filter: saturate(1) contrast(1);
-  z-index: 0;               /* ниже контента */
-}
-
-/* Внутренний контент карточки */
 .serve1Block1 {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  position: relative;
-  z-index: 1;               /* поверх фонового изображения */
+  gap: 13px;
 }
-
 .serve1Block1Heading {
   gap: 10px;
   display: flex;
   align-items: center;
-  flex-wrap: wrap;           /* чтобы длинный заголовок переносился */
 }
-
 .serve1Block1HeadingText {
   font-family: SemiBold1;
-  font-size: 28px;
+  font-size: 32px;
   color: #fcfffa;
-  margin: 8px 0;
+  margin-bottom: 13px;
+  margin-top: 12px;
 }
-
 .serve1Block1HeadingCost {
   background: #fcfffa;
   color: #62a744;
-  height: 32px;
+  height: 36px;
   border-radius: 20px;
-  padding: 0 12px;
-  font-size: 14px;
+  padding: 0px 16px;
+  font-size: 16px;
   font-family: SemiBold1;
   display: inline-flex;
   justify-content: center;
   align-items: center;
 }
-
 .serve1Block1Description {
   color: #fcfffa;
   font-family: Medium1;
-  font-size: 18px;
-  width: 100%;
-  margin: 0;
+  font-size: 20px;
+  width: 984px;
+  margin-bottom: 12px;
+  margin-top: 0px;
 }
-
 .serve1Button {
   background: #fcfffa;
   color: #203716;
   border-radius: 20px;
-  padding: 8px 14px;
+  padding: 10px 16px;
   gap: 10px;
   border: none;
   font-family: SemiBold1;
-  font-size: 14px;
-  margin-top: 8px;
-  align-self: flex-start;
-  position: relative;
-  z-index: 1;               /* поверх фонового изображения */
+  font-size: 16px;
+  width: 90px;
+  box-sizing: border-box;
 }
-
-/* Доп. блок снизу — отключаем «синий квадрат» */
-.serve2 {
-  display: none;
+.servesInLine {
   margin-left: 100px;
+  display: flex;
+  gap: 43px;
+}
+.serve2 {
+  box-sizing: border-box;
   margin-top: 13px;
   width: 328px;
-  height: 0;
+  height: 310px;
   border-radius: 22px;
-  padding: 0;
-  gap: 0;
-  background: transparent;
+  padding: 36px 48px;
+  gap: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: linear-gradient(to top right, #44a7a0, #006d86);
+}
+.serve2Container {
+  width: 258px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+.serve2ContainerHeading {
+  width: 258px;
+  display: flex;
+  justify-content: space-between;
+}
+.serve2ContainerHeadingName {
+  width: 130px;
+  font-family: SemiBold1;
+  font-size: 17px;
+  color: #fcfffa;
+}
+.serve2ContainerHeadingCost {
+  border-radius: 20px;
+  padding: 10px 16px;
+  gap: 10px;
+  background: #fcfffa;
+  font-family: SemiBold1;
+  font-size: 16px;
+  color: #62a744;
+  box-sizing: border-box;
+}
+.serve2car {
+  width: 100px;
+  height: 100px;
+}
+.serve2Content {
+  font-family: Regular1;
+  font-size: 14px;
+  width: 258px;
+  color: #fcfffa;
+}
+.serve2Button {
+  width: 192px;
+  height: 36px;
+  border-radius: 20px;
+  padding-top: 10px 16px;
+  background: #fcfffa;
+  color: #203716;
+  align-self: center;
+  box-sizing: border-box;
+  border: none;
+  font-family: SemiBold1;
+  font-size: 16px;
+  transition: background-color 0.5s ease, transform 0.3s ease;
+}
+.serve2Button:hover {
+  background: #35c0c0;
+  color: #fcfffa;
+  transform: scale(1.05);
+}
+.serve1Button:hover {
+  background: #35c0c0;
+  color: #fcfffa;
+  transform: scale(1.05);
 }
 
-/* Адаптивные улучшения */
-@media (max-width: 768px) {
-  .services-list {
-    padding: 12px 16px;
-    gap: 12px;
-  }
-  .serve1 {
-    padding: 12px 16px;
-    border-radius: 16px;
-  }
-  .serve1Block1HeadingText {
-    font-size: 22px;
-  }
-  .serve1Block1Description {
-    font-size: 16px;
-  }
-  .serve1Button {
-    font-size: 14px;
-    padding: 8px 12px;
-  }
+.serve3 {
+  box-sizing: border-box;
+  margin-top: 13px;
+  width: 328px;
+  height: 310px;
+  border-radius: 22px;
+  padding: 36px 48px;
+  gap: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: linear-gradient(to right, #bf57d2, #550086);
 }
+.serve4 {
+  box-sizing: border-box;
+  margin-top: 13px;
+  width: 328px;
+  height: 310px;
+  border-radius: 22px;
+  padding: 36px 48px;
+  gap: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: linear-gradient(to right, #e2a879, #864c00);
+}
+.oneServeHeading {
+  margin-top: 45px;
+  margin-bottom: 0px;
+  font-family: Bold1;
+  font-size: 48px;
+  width: 808px;
+  color: #203716;
+}
+.highlight1 {
+  color: #62a744;
+}
+.oneServePrice {
+  margin-top: 6px;
+  margin-left: 100px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.oneServePriceName {
+  font-family: SemiBold1;
+  font-size: 24px;
+  color: #203716;
+}
+.oneServePricePrice {
+  border-radius: 20px;
+  padding: 10px 16px;
+  font-family: SemiBold1;
+  font-size: 16px;
+  background: #62a744;
+  color: #fcfffa;
+}
+.oneServeContent {
+  margin-top: 27px;
+  font-family: Medium1;
+  font-size: 20px;
+  width: 1040px;
+  color: #203716;
+  margin-left: 100px;
+  height: 142px;
+}
+.higlight3 {
+  color: #62a744;
+}
+.oneServeHeading2 {
+  margin-top: 3px;
+  margin-left: 100px;
+  font-family: SemiBold1;
+  font-size: 24px;
+  color: #203716;
+}
+.highlight4 {
+  color: #62a744;
+}
+.oneServeForm {
+  display: flex;
+  margin-left: 100px;
+  margin-top: 17px;
+  gap: 20px;
+}
+.oneServeFormBlock {
+  display: flex;
+  flex-direction: column;
+  width: 327px;
+  gap: 6px;
+}
+.oneServeFormBlockHeading {
+  font-family: Medium1;
+  font-size: 15px;
+  width: 327px;
   
+}
+.oneServeFormBlockInput {
+  width: 327px;
+  height: 46px;
+  gap: 10px;
+  box-sizing: border-box;
+  border-radius: 22px;
+  padding: 14px 21px;
+  background: #e9e9e9;
+  font-family: Medium1;
+  font-size: 15px;
+  color: #203716ad;
+  border: none;
+}
+.oneServeFormBlockInput:hover {
+  background: #dfe0d0;
+}
+.oneSeveFormButton {
+  margin-top: 16px;
+  border-radius: 51px;
+  padding: 10px 16px;
+  font-family: Medium1;
+  font-size: 16px;
+  color: #f3ffed;
+  background: #62a744;
+  border: none;
+  margin-left: 987px;
+}
+.oneSeveFormButton:hover {
+  background: #35c0c0;
+  color: #fcfffa;
+  transform: scale(1.05);
+}

@@ -1,0 +1,51 @@
+.undHeadingNew {
+  margin-top: 10px;
+  width: 1070px;
+  gap: 10px;
+  display: flex;
+  align-items: center;
+}
+.tagUndHeadingNew {
+  border-radius: 20px;
+  padding: 10px 16px;
+  gap: 10px;
+  background: #62a744;
+  color: #f3ffed;
+  font-family: Medium1;
+  font-size: 16px;
+}
+
+.dateUndHeadingNew {
+  width: 110px;
+  height: 40px;
+  border-radius: 20px;
+  color: #62a744;
+  border: 1px solid #203716; /* объединяем border-color + border-width */
+  font-family: Medium1;
+  font-size: 16px;
+
+  display: flex; /* превращаем в flex-контейнер */
+  justify-content: center; /* горизонтальное центрирование текста */
+  align-items: center; /* вертикальное центрирование текста */
+}
+.contentNew {
+  margin-top: 28px;
+  font-family: Medium1;
+  font-size: 20px;
+  width: 1070px;
+  color: #203716;
+}
+.linkNew {
+  display: inline-block;
+  cursor: pointer;
+  color: #62a744;
+  font-family: Medium1;
+  font-size: 16px;
+  text-decoration: underline;
+  text-decoration-style: solid;
+  text-decoration-skip-ink: auto;
+  margin-top: 28px;
+}
+.linkNew:hover{
+    color: #367b18;
+}
